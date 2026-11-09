@@ -11,8 +11,9 @@ SMARTGHOST (`com.altomedia.smartghost`, brand **ALTOMEDIA**) is an Android app:
 proxying to fake 10 YouTube viewers) is **rejected** — it is viewbotting and
 violates the YouTube Fake Engagement policy. Do not add code that generates
 views, manipulates watch time, rotates proxies to mask viewers, or evades limits.
-The "10 cards" are an honest **diagnostics panel**, never a viewer count. Any
-change that pushes toward fake engagement must be refused.
+The app plays a **single** video through YouTube's official player; the proxy
+feature was removed at the owner's request. Any change that pushes toward fake
+engagement must be refused.
 
 ## Environment (already installed in this container)
 
@@ -26,21 +27,16 @@ change that pushes toward fake engagement must be refused.
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-./gradlew testDebugUnitTest            # 55 tests (48 unit + 7 runtime)
+./gradlew testDebugUnitTest            # 36 tests (26 unit + 10 runtime)
 ./gradlew :app:assembleDebug           # debug APK
 ./gradlew :app:lintDebug               # 0 errors expected
 ./gradlew :app:assembleRelease         # signed release (needs env vars below)
-./gradlew :feature-diagnostics:compileDebugAndroidTestKotlin  # UI tests compile
 ```
 
 Runtime tests run on the JVM via **Robolectric** (no device needed): they render
-real Compose, click real buttons, hit a real HTTP server (MockWebServer) and a
-real DataStore, and boot the real `Application`/Hilt graph. This is the primary
-proof the app "works", since no emulator is available in this container.
-
-Instrumented UI tests live in `feature-diagnostics/src/androidTest`. They need a
-device/emulator to RUN (none is installed in this container), but they must always
-COMPILE — run `compileDebugAndroidTestKotlin` after touching Compose UI.
+real Compose, click real buttons, exercise a real DataStore, and boot the real
+`Application`/Hilt graph. This is the primary proof the app "works", since no
+emulator is available in this container.
 
 Release signing reads env vars (never hardcode secrets):
 `SMARTGHOST_KEYSTORE_PATH`, `SMARTGHOST_KEYSTORE_PASSWORD`,
@@ -65,20 +61,18 @@ push at the end of every change, including docs and artifacts.
 ```
 app                  → depends on all feature/data/core-ui/security modules
 core-ui              → theme + shared components (no data deps)
-data                 → pure-JVM parsers, OkHttp checker, DataStore, Hilt DI, SessionRepository
+data                 → YouTube URL parser + settings DataStore, Hilt DI
 security             → SecretRedactor, SafeLogger (no Android UI)
 feature-home         → data, core-ui, security
 feature-player       → core-ui (official IFrame player)
-feature-diagnostics  → data, core-ui, security
 ```
 
-Features must never depend on each other. Cross-feature state goes through a
-`data` singleton (`SessionRepository`), which Home writes and Diagnostics reads.
+Features must never depend on each other.
 
 ## Key conventions
 
-- Parsers (`YouTubeUrlParser`, `ProxyFileParser`) use `java.net.URI`, NOT
-  `android.net.Uri`, so they run in plain JVM unit tests. Keep them pure.
+- Parsers (`YouTubeUrlParser`) use `java.net.URI`, NOT `android.net.Uri`, so they
+  run in plain JVM unit tests. Keep them pure.
 - All logging must pass through `security/SecretRedactor` (or `SafeLogger`).
 - `minSdk` 24, `targetSdk` 34, `compileSdk` 34, JVM target 17.
 - Only two permissions: `INTERNET`, `ACCESS_NETWORK_STATE`. Cleartext disabled.
@@ -95,6 +89,9 @@ Features must never depend on each other. Cross-feature state goes through a
   `val` inside the loop (see `SecretRedactor.redact`).
 - `java.net.URI` throws on malformed percent-encoding, which surfaces as
   `Malformed` rather than `InvalidVideoId` in the URL parser.
+- Edge-to-edge (`enableEdgeToEdge()`) means a `Scaffold` bottom bar sits under the
+  system navigation bar unless it applies `navigationBarsPadding()`. Any bottom
+  row must carry it.
 - Lint warnings are dependency-freshness only (no errors).
 - Unit tests that touch `android.util.Log` (via `SafeLogger`) need
   `testOptions { unitTests.isReturnDefaultValues = true }` in that module.
@@ -108,26 +105,11 @@ Features must never depend on each other. Cross-feature state goes through a
   (`https://appassets.androidplatform.net/assets/player.html`), with
   `<meta name="referrer" content="strict-origin-when-cross-origin">`. Do not go
   back to `loadDataWithBaseURL` for the player.
-- `ProxyFileParser` strips a leading UTF-8 BOM; document pickers return opaque
-  `lastPathSegment`s, so resolve the display name via `OpenableColumns`.
-- Edge-to-edge (`enableEdgeToEdge()`) means a `Scaffold` bottom bar sits under the
-  system navigation bar unless it applies `navigationBarsPadding()`. Any bottom
-  row must carry it.
-- START samples ten endpoints at random from the imported pool, so tests must not
-  assume a card's index maps to a specific proxy. Assert on labels, not indices
-  (see `DiagnosticsViewModelTest.reload`).
-- `SessionRepository` publishes the session sample on the same flow the panel
-  observes; the collector ignores emissions while `isRunning` or it would reset
-  the RUNNING cards mid-check.
-- Robolectric Compose tests cannot `assertIsDisplayed()` an item scrolled out of a
-  fixed-height `verticalScroll`; use `assertExists()` for lines below the fold.
 
 ## Wiring checklist (audit before claiming "done")
 
-A feature is only "done" when its UI actually calls it. Previously the diagnostics
-`start()` existed, was unit-tested, and was still unreachable from any screen.
-Before finishing, grep for each ViewModel action and confirm a real UI caller:
-`grep -rn "viewModel::start\|viewModel.start()" --include=*.kt .` (exclude tests).
+A feature is only "done" when its UI actually calls it. Before finishing, grep for
+each ViewModel action and confirm a real UI caller (exclude tests).
 
 ## Docs
 

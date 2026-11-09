@@ -16,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -73,71 +72,6 @@ fun SettingsScreen(
                 checked = state.darkTheme,
                 onCheckedChange = viewModel::setDarkTheme,
             )
-
-            SectionLabel("DIAGNOSTIK")
-            SmartCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "Batas waktu uji: ${state.testTimeoutSeconds} detik",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Text(
-                        text = "Uji hanya dijalankan terhadap endpoint yang Anda " +
-                            "miliki atau diizinkan untuk diuji.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Row(
-                        modifier = Modifier.padding(top = 6.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        listOf(5, 8, 15).forEach { seconds ->
-                            TextButton(onClick = { viewModel.setTestTimeout(seconds) }) {
-                                Text("$seconds s")
-                            }
-                        }
-                    }
-                }
-            }
-            SettingRow(
-                title = "Simpan riwayat diagnostik",
-                subtitle = "Opsional. Dapat dihapus kapan saja.",
-                checked = state.storeHistory,
-                onCheckedChange = viewModel::setStoreHistory,
-            )
-
-            SmartCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "Endpoint uji yang diizinkan",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    if (state.authorizedEndpoints.isEmpty()) {
-                        Text(
-                            text = "Belum ada. Impor proxy.txt dari beranda untuk " +
-                                "mendaftarkan endpoint milik Anda.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    } else {
-                        Text(
-                            text = "Dari ${state.proxyFileName ?: "proxy.txt"} " +
-                                "(${state.authorizedEndpoints.size} endpoint):",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        state.authorizedEndpoints.take(10).forEach { endpoint ->
-                            Text(
-                                text = "${endpoint.index}. ${endpoint.url}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    }
-                }
-            }
 
             SectionLabel("PRIVASI")
             SmartCard(modifier = Modifier.fillMaxWidth()) {

@@ -4,6 +4,29 @@ All notable changes to SMARTGHOST are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] — 2026-11-09
+
+Removed the proxy feature at the owner's request. The app is now a focused,
+single-player YouTube link checker.
+
+### Removed
+- The entire `proxy.txt` feature: `ProxyFileParser`, the proxy import UI on Home,
+  the proxy console, the 10-card diagnostics panel, the `feature-diagnostics`
+  module, `SessionRepository`, `EndpointChecker`, and the diagnostic history store.
+- The OkHttp / MockWebServer dependencies (no longer used).
+
+### Changed
+- Home screen is now: YouTube link field → START → status → Settings. No file
+  picker.
+- Session screen shows the single official player with a HOME button that clears
+  the system navigation bar (edge-to-edge `navigationBarsPadding()`).
+- Settings shows theme + privacy + version only.
+- Tests trimmed to the remaining surface: 36 tests, 0 failures.
+
+### Notes
+- The app still does **not** and must **not** generate artificial views. Running
+  ten embeds to be counted as ten viewers is viewbotting and remains rejected.
+
 ## [1.0.5] — 2026-11-09
 
 Fix for "proxy selalu gagal menonton".

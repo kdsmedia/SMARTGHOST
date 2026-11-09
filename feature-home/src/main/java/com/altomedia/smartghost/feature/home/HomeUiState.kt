@@ -1,6 +1,5 @@
 package com.altomedia.smartghost.feature.home
 
-import com.altomedia.smartghost.data.proxy.ProxyParseError
 import com.altomedia.smartghost.data.youtube.UrlParseResult
 
 /**
@@ -10,14 +9,9 @@ import com.altomedia.smartghost.data.youtube.UrlParseResult
 data class HomeUiState(
     val urlInput: String = "",
     val urlValidation: UrlValidation = UrlValidation.Idle,
-    val proxyFileName: String? = null,
-    val proxyEndpointCount: Int = 0,
-    val proxyErrors: List<ProxyParseError> = emptyList(),
     val canStart: Boolean = false,
     val message: String? = null,
-) {
-    val hasProxyLoaded: Boolean get() = proxyFileName != null
-}
+)
 
 /** Validation feedback shown under the URL field. */
 sealed interface UrlValidation {

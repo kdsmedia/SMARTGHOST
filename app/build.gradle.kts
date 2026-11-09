@@ -13,8 +13,8 @@ android {
         applicationId = "com.altomedia.smartghost"
         minSdk = 24
         targetSdk = 34
-        versionCode = 6
-        versionName = "1.0.5"
+        versionCode = 7
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -89,7 +89,6 @@ dependencies {
     implementation(project(":security"))
     implementation(project(":feature-home"))
     implementation(project(":feature-player"))
-    implementation(project(":feature-diagnostics"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -1,9 +1,9 @@
-# SMARTGHOST 1.0.5 — Release Notes
+# SMARTGHOST 1.1.0 — Release Notes
 
 **Brand:** ALTOMEDIA
 **Date:** 2026-11-09
 **Package:** `com.altomedia.smartghost`
-**versionCode / versionName:** `6` / `1.0.5`
+**versionCode / versionName:** `7` / `1.1.0`
 **Min / Target / Compile SDK:** 24 / 34 / 34
 
 ---
@@ -14,12 +14,29 @@
 | --- | --- |
 | File | `app/build/outputs/apk/release/app-release.apk` |
 | Size | ~1.4 MB |
-| SHA-256 | `383a49495434d80c781a8345834f5bec761d7972cde15dd4a55ed3304bbac2ec` |
+| SHA-256 | `8cab108e68685c6bcf38f33a236bfee70288b7748d2fbb7ac35d96559d6408e4` |
 | Signature | APK Signature Scheme v2 — verified |
 | Signer | `CN=ALTOMEDIA, OU=SMARTGHOST, O=ALTOMEDIA, L=Jakarta, S=DKI Jakarta, C=ID` |
 | Key | RSA 4096-bit |
 
 > Recompute the SHA-256 after any rebuild: `sha256sum app/build/outputs/apk/release/app-release.apk`.
+
+## What changed in 1.1.0
+
+The proxy feature is removed. SMARTGHOST is now a focused single-player link
+checker.
+
+- Removed the entire `proxy.txt` feature: the parser, the Home file picker, the
+  proxy console, the 10-card diagnostics panel, the `feature-diagnostics` module,
+  `SessionRepository`, `EndpointChecker`, and diagnostic history.
+- Removed the OkHttp / MockWebServer dependencies.
+- Home is now: YouTube link field → START → status → Settings.
+- Session screen: the single official player plus a HOME button; the bottom bar
+  clears the system navigation bar.
+- Settings shows theme + privacy + version only.
+- 36 tests, 0 failures; lint 0 errors.
+- The app still never generates artificial views. Ten embeds counted as ten
+  viewers is viewbotting and stays rejected.
 
 ## What changed in 1.0.5
 

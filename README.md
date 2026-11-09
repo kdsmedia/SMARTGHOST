@@ -4,10 +4,9 @@
 **Package:** `com.altomedia.smartghost`
 **Platform:** Android (Kotlin · Jetpack Compose · Material 3 · MVVM)
 
-SMARTGHOST is a **YouTube URL checker and network diagnostics tool**. It helps you
-validate YouTube links, import an authorised `proxy.txt` test configuration, and
-run safe endpoint diagnostics — all while playing back a single video through the
-**official YouTube IFrame Player API**, controlled entirely by you.
+SMARTGHOST is a **YouTube link checker and player**. It validates a YouTube URL and
+opens that video through the **official YouTube IFrame Player API**, controlled
+entirely by you.
 
 > ### ⚠️ Scope statement — please read first
 >
@@ -18,9 +17,8 @@ run safe endpoint diagnostics — all while playing back a single video through 
 >
 > This app therefore does **not**, and must never, generate artificial views,
 > manipulate watch time, rotate proxies to hide viewer identity, or bypass platform
-> limits. The "10 cards" from the original concept are re-implemented as an honest
-> **10-card diagnostics panel** that reports endpoint connectivity — never a
-> viewer count.
+> limits. It plays **one** video, through YouTube's official player, driven only by
+> your own play/pause actions.
 
 ---
 
@@ -30,8 +28,8 @@ run safe endpoint diagnostics — all while playing back a single video through 
 | --- | --- |
 | YouTube URL validation | Detects `watch`, `youtu.be`, `shorts`, `live`, and `embed` links and validates the video id. |
 | Single official playback | One YouTube player via the official IFrame Player API; play/pause follows user action only. |
-| `proxy.txt` import | Parses and validates an authorised test-endpoint file (format + line numbers + duplicate detection). |
-| 10-card diagnostics panel | START / RELOAD / HOME controls with bounded concurrency, latency and connection status. |
+| Clear playback status | Reports the player's own ready / playing / error state so you can see whether the video runs. |
+| Open in YouTube | One tap to open the same video in the official YouTube app or site. |
 | Secret-safe logging | All logs pass through a redactor; no tokens, passwords, cookies, or keys are ever stored or logged. |
 
 ## What the app will never do
@@ -47,13 +45,12 @@ run safe endpoint diagnostics — all while playing back a single video through 
 
 ```
 SMARTGHOST/
-├── app/                  # Application, MainActivity, navigation, signing config
-├── core-ui/              # Compose theme (dark navy/charcoal + electric blue/cyan) + shared components
-├── data/                 # YouTube URL parser, proxy.txt parser, endpoint checker, DataStore, Hilt DI
-├── security/             # SecretRedactor + SafeLogger (log redaction)
-├── feature-home/         # URL input, proxy import, START
-├── feature-player/       # Single official YouTube player (IFrame Player API)
-└── feature-diagnostics/  # 10-card diagnostics panel + session management
+├── app/              # Application, MainActivity, navigation, settings, signing config
+├── core-ui/          # Compose theme (dark navy/charcoal + electric blue/cyan) + shared components
+├── data/             # YouTube URL parser + settings DataStore (pure-JVM where possible)
+├── security/         # SecretRedactor + SafeLogger (log redaction)
+├── feature-home/     # URL input + START
+└── feature-player/   # Single official YouTube player (IFrame Player API)
 ```
 
 Dependency direction: `feature-* → data / core-ui / security → app`.
@@ -95,8 +92,8 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ./gradlew testDebugUnitTest
 ```
 
-Unit tests cover the URL parser, `proxy.txt` parser, endpoint checker, and the
-secret redactor. See [docs/TESTING.md](docs/TESTING.md).
+Unit tests cover the URL parser and the secret redactor. See
+[docs/TESTING.md](docs/TESTING.md).
 
 ## Privacy & security
 
@@ -104,7 +101,6 @@ secret redactor. See [docs/TESTING.md](docs/TESTING.md).
 - Backups and device-transfer of app data are disabled.
 - Cleartext HTTP traffic is disabled (`usesCleartextTraffic="false"`); only HTTPS.
 - Only two permissions: `INTERNET` and `ACCESS_NETWORK_STATE`.
-- Proxy authentication (if ever needed) must use encrypted storage — never plain text.
 
 ## Documentation
 
@@ -118,9 +114,8 @@ secret redactor. See [docs/TESTING.md](docs/TESTING.md).
 - [x] Package name `com.altomedia.smartghost`
 - [x] All main screens with loading / empty / success / error states
 - [x] YouTube URLs detected; playback uses official integration
-- [x] Ten cards work as an honest diagnostics panel (no artificial views)
-- [x] Proxy import restricted to authorised test endpoints
-- [x] HOME, RELOAD, START behave per specification
+- [x] No artificial views, watch time, or viewer claims
+- [x] START / HOME behave per specification
 - [x] No secrets in Git, logs, APK resources, or documents
 - [x] Release APK passes signature verification
 - [x] README, changelog, build instructions, and release notes provided

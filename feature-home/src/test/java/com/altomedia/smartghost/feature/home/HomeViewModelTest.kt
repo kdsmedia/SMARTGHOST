@@ -1,58 +1,54 @@
 package com.altomedia.smartghost.feature.home
 
-import com.altomedia.smartghost.data.session.SessionRepository
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HomeViewModelTest {
 
-    private val sessionRepository = SessionRepository()
-    private val viewModel = HomeViewModel(sessionRepository)
+    private val viewModel = HomeViewModel()
 
     @Test
-    fun `loading a proxy file publishes endpoints to the session`() {
-        viewModel.onProxyFileLoaded("proxy.txt", "1.2.3.4:8080\n5.6.7.8:9090")
-
-        val state = viewModel.uiState.value
-        assertEquals("proxy.txt", state.proxyFileName)
-        assertEquals(2, state.proxyEndpointCount)
-        assertTrue(state.hasProxyLoaded)
-        assertEquals(2, sessionRepository.endpoints.value.size)
-        assertNotNull(state.message)
+    fun `empty input cannot start`() {
+        assertEquals("", viewModel.uiState.value.urlInput)
+        assertFalse(viewModel.uiState.value.canStart)
     }
 
     @Test
-    fun `proxy file with utf8 bom still parses endpoints`() {
-        viewModel.onProxyFileLoaded("proxy.txt", "\uFEFF10.0.0.1:1080")
+    fun `valid youtube url enables start`() {
+        viewModel.onUrlChanged("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
         val state = viewModel.uiState.value
-        assertEquals(1, state.proxyEndpointCount)
-        assertTrue(state.proxyErrors.isEmpty())
+        assertTrue(state.canStart)
+        assertEquals(UrlValidation.Valid, state.urlValidation)
     }
 
     @Test
-    fun `unreadable proxy file reports a clear message and clears session`() {
-        viewModel.onProxyFileLoaded("proxy.txt", "1.2.3.4:8080")
-        viewModel.onProxyFileLoaded("broken.txt", null)
+    fun `non youtube url is rejected`() {
+        viewModel.onUrlChanged("https://vimeo.com/123456")
 
         val state = viewModel.uiState.value
-        assertEquals("broken.txt", state.proxyFileName)
-        assertEquals(0, state.proxyEndpointCount)
-        assertTrue(state.message!!.contains("tidak dapat dibaca"))
-        assertTrue(sessionRepository.endpoints.value.isEmpty())
+        assertFalse(state.canStart)
+        assertTrue(state.urlValidation is UrlValidation.Invalid)
     }
 
     @Test
-    fun `clearProxy empties state and session`() {
-        viewModel.onProxyFileLoaded("proxy.txt", "1.2.3.4:8080")
-        viewModel.clearProxy()
+    fun `malformed url is rejected`() {
+        viewModel.onUrlChanged("not a url at all !!!")
 
         val state = viewModel.uiState.value
-        assertNull(state.proxyFileName)
-        assertEquals(0, state.proxyEndpointCount)
-        assertTrue(sessionRepository.endpoints.value.isEmpty())
+        assertFalse(state.canStart)
+        assertTrue(state.urlValidation is UrlValidation.Invalid)
+    }
+
+    @Test
+    fun `clearing the url returns to idle`() {
+        viewModel.onUrlChanged("https://youtu.be/dQw4w9WgXcQ")
+        viewModel.onUrlChanged("")
+
+        val state = viewModel.uiState.value
+        assertFalse(state.canStart)
+        assertEquals(UrlValidation.Idle, state.urlValidation)
     }
 }
