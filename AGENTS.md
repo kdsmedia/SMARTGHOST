@@ -26,11 +26,16 @@ change that pushes toward fake engagement must be refused.
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-./gradlew testDebugUnitTest            # 46 unit tests
+./gradlew testDebugUnitTest            # 48 unit tests
 ./gradlew :app:assembleDebug           # debug APK
 ./gradlew :app:lintDebug               # 0 errors expected
 ./gradlew :app:assembleRelease         # signed release (needs env vars below)
+./gradlew :feature-diagnostics:compileDebugAndroidTestKotlin  # UI tests compile
 ```
+
+Instrumented UI tests live in `feature-diagnostics/src/androidTest`. They need a
+device/emulator to RUN (none is installed in this container), but they must always
+COMPILE — run `compileDebugAndroidTestKotlin` after touching Compose UI.
 
 Release signing reads env vars (never hardcode secrets):
 `SMARTGHOST_KEYSTORE_PATH`, `SMARTGHOST_KEYSTORE_PASSWORD`,
@@ -75,6 +80,18 @@ Features must never depend on each other. Cross-feature state goes through a
 - `java.net.URI` throws on malformed percent-encoding, which surfaces as
   `Malformed` rather than `InvalidVideoId` in the URL parser.
 - Lint warnings are dependency-freshness only (no errors).
+- Unit tests that touch `android.util.Log` (via `SafeLogger`) need
+  `testOptions { unitTests.isReturnDefaultValues = true }` in that module.
+- A `@Composable` default parameter `hiltViewModel()` creates a SECOND ViewModel
+  instance when a caller also hoists one. Never default a hoisted VM — take it as
+  a required parameter (see `DiagnosticsPanel`).
+
+## Wiring checklist (audit before claiming "done")
+
+A feature is only "done" when its UI actually calls it. Previously the diagnostics
+`start()` existed, was unit-tested, and was still unreachable from any screen.
+Before finishing, grep for each ViewModel action and confirm a real UI caller:
+`grep -rn "viewModel::start\|viewModel.start()" --include=*.kt .` (exclude tests).
 
 ## Docs
 

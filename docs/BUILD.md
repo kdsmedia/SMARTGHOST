@@ -106,7 +106,7 @@ $ANDROID_HOME/build-tools/34.0.0/aapt2 dump badging \
 Expected:
 
 ```
-package: name='com.altomedia.smartghost' versionCode='1' versionName='1.0.0'
+package: name='com.altomedia.smartghost' versionCode='2' versionName='1.0.1'
 sdkVersion:'24' targetSdkVersion:'34'
 uses-permission: name='android.permission.INTERNET'
 uses-permission: name='android.permission.ACCESS_NETWORK_STATE'

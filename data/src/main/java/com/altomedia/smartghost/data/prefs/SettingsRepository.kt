@@ -20,19 +20,28 @@ data class UserSettings(
     val storeHistory: Boolean = false,
 )
 
+/**
+ * Read-only view of settings for consumers that only need to react to changes
+ * (e.g. the diagnostics panel). Keeps those consumers testable without a real
+ * DataStore/Context.
+ */
+interface SettingsSource {
+    val settings: Flow<UserSettings>
+}
+
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "smartghost_settings")
 
 @Singleton
 class SettingsRepository @Inject constructor(
     @ApplicationContext private val context: Context,
-) {
+) : SettingsSource {
     private object Keys {
         val DARK_THEME = booleanPreferencesKey("dark_theme")
         val TEST_TIMEOUT = intPreferencesKey("test_timeout_seconds")
         val STORE_HISTORY = booleanPreferencesKey("store_history")
     }
 
-    val settings: Flow<UserSettings> = context.dataStore.data.map { prefs ->
+    override val settings: Flow<UserSettings> = context.dataStore.data.map { prefs ->
         UserSettings(
             darkTheme = prefs[Keys.DARK_THEME] ?: true,
             testTimeoutSeconds = prefs[Keys.TEST_TIMEOUT] ?: 8,

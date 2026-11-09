@@ -29,6 +29,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":security"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore.preferences)

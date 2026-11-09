@@ -85,7 +85,6 @@ private fun SmartGhostNavHost() {
                 videoId = videoId,
                 onHome = { navController.popBackStack(Routes.HOME, inclusive = false) },
                 onOpenInYouTube = { url -> openExternal(context, url) },
-                onReload = { navController.navigate(Routes.session(videoId)) },
             )
         }
         composable(Routes.SETTINGS) {

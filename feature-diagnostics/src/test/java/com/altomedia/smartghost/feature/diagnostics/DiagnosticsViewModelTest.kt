@@ -4,9 +4,15 @@ import com.altomedia.smartghost.data.diagnostics.DiagnosticResult
 import com.altomedia.smartghost.data.diagnostics.DiagnosticStatus
 import com.altomedia.smartghost.data.diagnostics.EndpointChecker
 import com.altomedia.smartghost.data.diagnostics.TestEndpoint
+import com.altomedia.smartghost.data.history.DiagnosticHistoryStore
+import com.altomedia.smartghost.data.history.HistoryEntry
+import com.altomedia.smartghost.data.prefs.SettingsSource
+import com.altomedia.smartghost.data.prefs.UserSettings
 import com.altomedia.smartghost.data.session.SessionRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -26,8 +32,10 @@ class DiagnosticsViewModelTest {
     /** Deterministic checker: any endpoint whose url contains "fail" fails. */
     private class FakeChecker : EndpointChecker {
         var calls = mutableListOf<Int>()
-        override suspend fun check(endpoint: TestEndpoint): DiagnosticResult {
+        var lastTimeout: Int? = null
+        override suspend fun check(endpoint: TestEndpoint, timeoutSeconds: Int): DiagnosticResult {
             calls += endpoint.index
+            lastTimeout = timeoutSeconds
             val success = !endpoint.url.contains("fail")
             return DiagnosticResult(
                 index = endpoint.index,
@@ -40,14 +48,33 @@ class DiagnosticsViewModelTest {
         }
     }
 
+    private class FakeSettings(initial: UserSettings = UserSettings()) : SettingsSource {
+        override val settings: Flow<UserSettings> = MutableStateFlow(initial)
+    }
+
+    private class FakeHistory : DiagnosticHistoryStore {
+        val store = MutableStateFlow<List<HistoryEntry>>(emptyList())
+        override val history: Flow<List<HistoryEntry>> = store
+        override suspend fun add(entry: HistoryEntry) {
+            store.value = listOf(entry) + store.value
+        }
+        override suspend fun clear() {
+            store.value = emptyList()
+        }
+    }
+
     private lateinit var checker: FakeChecker
     private lateinit var repository: SessionRepository
+    private lateinit var settings: FakeSettings
+    private lateinit var history: FakeHistory
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         checker = FakeChecker()
         repository = SessionRepository()
+        settings = FakeSettings()
+        history = FakeHistory()
     }
 
     @After
@@ -55,7 +82,7 @@ class DiagnosticsViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = DiagnosticsViewModel(checker, repository)
+    private fun viewModel() = DiagnosticsViewModel(checker, repository, settings, history)
 
     @Test
     fun `panel always exposes ten cards`() {
@@ -139,6 +166,43 @@ class DiagnosticsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(false, vm.uiState.value.isRunning)
+    }
+
+    @Test
+    fun `settings timeout is passed to the checker`() = runTest(dispatcher) {
+        settings = FakeSettings(UserSettings(testTimeoutSeconds = 15))
+        val vm = viewModel()
+        repository.setProxyEndpoints("proxy.txt", listOf(proxy("a.test", 80)))
+        advanceUntilIdle()
+
+        vm.start()
+        advanceUntilIdle()
+
+        assertEquals(15, checker.lastTimeout)
+    }
+
+    @Test
+    fun `history is recorded only when enabled and can be cleared`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repository.setProxyEndpoints("proxy.txt", listOf(proxy("a.test", 80)))
+        advanceUntilIdle()
+
+        // Disabled by default: nothing stored.
+        vm.start()
+        advanceUntilIdle()
+        assertTrue(vm.uiState.value.history.isEmpty())
+
+        // Enable history and run again with a fresh ViewModel.
+        settings = FakeSettings(UserSettings(storeHistory = true))
+        val vm2 = DiagnosticsViewModel(checker, repository, settings, history)
+        advanceUntilIdle()
+        vm2.start()
+        advanceUntilIdle()
+        assertTrue(vm2.uiState.value.history.isNotEmpty())
+
+        vm2.clearHistory()
+        advanceUntilIdle()
+        assertTrue(vm2.uiState.value.history.isEmpty())
     }
 
     private fun proxy(host: String, port: Int) =

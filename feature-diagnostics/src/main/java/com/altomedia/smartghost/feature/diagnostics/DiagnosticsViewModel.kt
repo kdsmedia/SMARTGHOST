@@ -6,7 +6,11 @@ import com.altomedia.smartghost.data.diagnostics.DiagnosticResult
 import com.altomedia.smartghost.data.diagnostics.DiagnosticStatus
 import com.altomedia.smartghost.data.diagnostics.EndpointChecker
 import com.altomedia.smartghost.data.diagnostics.TestEndpoint
+import com.altomedia.smartghost.data.history.DiagnosticHistoryStore
+import com.altomedia.smartghost.data.history.HistoryEntry
+import com.altomedia.smartghost.data.prefs.SettingsSource
 import com.altomedia.smartghost.data.session.SessionRepository
+import com.altomedia.smartghost.security.SafeLogger
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +33,8 @@ data class DiagnosticsUiState(
     val isRunning: Boolean = false,
     val proxyFileName: String? = null,
     val note: String? = null,
+    val history: List<HistoryEntry> = emptyList(),
+    val storeHistory: Boolean = false,
 ) {
     companion object {
         fun defaultCards(): List<DiagnosticResult> = (1..CARD_COUNT).map { index ->
@@ -41,6 +47,8 @@ data class DiagnosticsUiState(
 class DiagnosticsViewModel @Inject constructor(
     private val checker: EndpointChecker,
     private val sessionRepository: SessionRepository,
+    private val settingsRepository: SettingsSource,
+    private val historyRepository: DiagnosticHistoryStore,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DiagnosticsUiState())
@@ -50,6 +58,10 @@ class DiagnosticsViewModel @Inject constructor(
 
     /** Endpoints the user is authorised to test, one per card (max ten). */
     private var endpoints: List<TestEndpoint> = emptyList()
+
+    /** Latest timeout + history preference, kept in sync with Settings (Bab 9). */
+    private var testTimeoutSeconds: Int = 8
+    private var storeHistory: Boolean = false
 
     init {
         viewModelScope.launch {
@@ -61,6 +73,18 @@ class DiagnosticsViewModel @Inject constructor(
         viewModelScope.launch {
             sessionRepository.proxyFileName.collect { name ->
                 _uiState.update { it.copy(proxyFileName = name) }
+            }
+        }
+        viewModelScope.launch {
+            settingsRepository.settings.collect { settings ->
+                testTimeoutSeconds = settings.testTimeoutSeconds
+                storeHistory = settings.storeHistory
+                _uiState.update { it.copy(storeHistory = settings.storeHistory) }
+            }
+        }
+        viewModelScope.launch {
+            historyRepository.history.collect { entries ->
+                _uiState.update { it.copy(history = entries) }
             }
         }
     }
@@ -144,8 +168,9 @@ class DiagnosticsViewModel @Inject constructor(
             targets.map { endpoint ->
                 launch {
                     semaphore.withPermit {
-                        val result = checker.check(endpoint)
+                        val result = checker.check(endpoint, testTimeoutSeconds)
                         updateCard(result)
+                        recordHistory(result)
                     }
                 }
             }.forEach { it.join() }
@@ -154,7 +179,31 @@ class DiagnosticsViewModel @Inject constructor(
         }
     }
 
+    /** Persists a redacted history line when the user enabled history (Bab 9). */
+    private suspend fun recordHistory(result: DiagnosticResult) {
+        if (!storeHistory) return
+        val detail = buildString {
+            append(result.httpCode?.let { "HTTP $it" } ?: "-")
+            result.latencyMs?.let { append(" · ${it} ms") }
+            result.errorSummary?.let { append(" · $it") }
+        }
+        historyRepository.add(
+            HistoryEntry(
+                timestamp = result.lastCheckedAt ?: System.currentTimeMillis(),
+                label = result.endpointLabel,
+                status = result.status.name,
+                detail = detail,
+            ),
+        )
+    }
+
+    /** Clears stored diagnostic history (Bab 9). */
+    fun clearHistory() {
+        viewModelScope.launch { historyRepository.clear() }
+    }
+
     private fun updateCard(result: DiagnosticResult) {
+        SafeLogger.d("diag card #${result.index} -> ${result.status} (${result.errorSummary ?: "ok"})")
         _uiState.update { current ->
             current.copy(
                 cards = current.cards.map { card ->

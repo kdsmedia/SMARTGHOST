@@ -17,7 +17,11 @@ import javax.net.ssl.SSLException
  * claims. The result reports only latency, HTTP status and a safe error summary.
  */
 interface EndpointChecker {
-    suspend fun check(endpoint: TestEndpoint): DiagnosticResult
+    /**
+     * Probes a single endpoint. [timeoutSeconds] comes from the user's settings
+     * (Bab 9) and is clamped to a safe range (Bab 7).
+     */
+    suspend fun check(endpoint: TestEndpoint, timeoutSeconds: Int = 8): DiagnosticResult
 }
 
 /** A test endpoint that the user owns or is explicitly allowed to probe. */
@@ -31,8 +35,15 @@ class OkHttpEndpointChecker @Inject constructor(
     private val client: OkHttpClient,
 ) : EndpointChecker {
 
-    override suspend fun check(endpoint: TestEndpoint): DiagnosticResult =
+    override suspend fun check(endpoint: TestEndpoint, timeoutSeconds: Int): DiagnosticResult =
         withContext(Dispatchers.IO) {
+            val safeTimeout = timeoutSeconds.coerceIn(2, 30).toLong()
+            val requestClient = client.newBuilder()
+                .connectTimeout(safeTimeout, TimeUnit.SECONDS)
+                .readTimeout(safeTimeout, TimeUnit.SECONDS)
+                .callTimeout(safeTimeout + 3, TimeUnit.SECONDS)
+                .build()
+
             val startedAt = System.currentTimeMillis()
             val request = Request.Builder()
                 .url(endpoint.url)
@@ -40,7 +51,7 @@ class OkHttpEndpointChecker @Inject constructor(
                 .build()
 
             try {
-                client.newCall(request).execute().use { response ->
+                requestClient.newCall(request).execute().use { response ->
                     val latency = System.currentTimeMillis() - startedAt
                     val success = response.isSuccessful
                     DiagnosticResult(

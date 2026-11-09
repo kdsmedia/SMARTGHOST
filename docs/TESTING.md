@@ -29,7 +29,7 @@ Run all:
 | `SecretRedactorTest` | 10 | GitHub tokens, bearer tokens, password/api-key assignments, URL credentials, and JWTs are redacted; plain text is untouched. |
 | `DiagnosticsViewModelTest` | 6 | Panel always exposes 10 cards; imported endpoints populate labels; START checks all endpoints; RELOAD retries only failed cards; empty-config start reports a note; STOP cancels the session. |
 
-**Total: 46 unit tests.**
+**Total: 48 unit tests.**
 
 ### Why the parsers are pure-JVM
 

@@ -1,6 +1,7 @@
 package com.altomedia.smartghost.feature.player
 
 import android.annotation.SuppressLint
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Arrangement
@@ -26,8 +27,12 @@ import com.altomedia.smartghost.coreui.component.SecondaryActionButton
  * Single official YouTube player (Bab 6). Uses the YouTube IFrame Player API so
  * playback follows YouTube's rules and is driven only by the user's play/pause
  * actions. SMARTGHOST never creates multiple players or manipulates view counts.
+ *
+ * A minimal JavaScript bridge relays the player's own error and state-change
+ * callbacks back to the ViewModel so the UI can show honest status. The bridge
+ * exposes no data and cannot read files or reflection — it only reports codes.
  */
-@SuppressLint("SetJavaScriptEnabled")
+@SuppressLint("SetJavaScriptEnabled", "AddJavascriptInterface")
 @Composable
 fun PlayerScreen(
     videoId: String,
@@ -36,8 +41,9 @@ fun PlayerScreen(
     viewModel: PlayerViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val safeVideoId = sanitizeVideoId(videoId)
 
-    LaunchedEffect(videoId) { viewModel.load(videoId) }
+    LaunchedEffect(safeVideoId) { viewModel.load(safeVideoId) }
 
     Column(
         modifier = modifier
@@ -52,27 +58,18 @@ fun PlayerScreen(
             factory = { context ->
                 WebView(context).apply {
                     settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
                     settings.mediaPlaybackRequiresUserGesture = true
                     webViewClient = WebViewClient()
-                    loadDataWithBaseURL(
-                        YOUTUBE_REFERRER,
-                        buildPlayerHtml(videoId),
-                        "text/html",
-                        "utf-8",
-                        null,
-                    )
+                    addJavascriptInterface(PlayerBridge(viewModel), BRIDGE_NAME)
+                    tag = safeVideoId
+                    loadPlayer(safeVideoId)
                 }
             },
             update = { webView: WebView ->
-                if (webView.tag != videoId) {
-                    webView.tag = videoId
-                    webView.loadDataWithBaseURL(
-                        YOUTUBE_REFERRER,
-                        buildPlayerHtml(videoId),
-                        "text/html",
-                        "utf-8",
-                        null,
-                    )
+                if (webView.tag != safeVideoId) {
+                    webView.tag = safeVideoId
+                    webView.loadPlayer(safeVideoId)
                 }
             },
         )
@@ -87,7 +84,7 @@ fun PlayerScreen(
         SecondaryActionButton(
             text = "Buka di aplikasi/situs YouTube",
             icon = Icons.AutoMirrored.Filled.OpenInNew,
-            onClick = { onOpenInYouTube("https://www.youtube.com/watch?v=$videoId") },
+            onClick = { onOpenInYouTube("https://www.youtube.com/watch?v=$safeVideoId") },
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -101,7 +98,48 @@ fun PlayerScreen(
     }
 }
 
+private const val BRIDGE_NAME = "SmartGhostBridge"
 private const val YOUTUBE_REFERRER = "https://www.youtube.com"
+
+/** Relays the official player's callbacks to the ViewModel. Reports codes only. */
+private class PlayerBridge(private val viewModel: PlayerViewModel) {
+    @JavascriptInterface
+    fun onPlayerError(code: Int) {
+        viewModel.onError(playerErrorMessage(code))
+    }
+
+    @JavascriptInterface
+    fun onStateChange(state: Int) {
+        viewModel.onPlaybackStateChanged(state == 1)
+    }
+}
+
+private fun WebView.loadPlayer(videoId: String) {
+    loadDataWithBaseURL(
+        YOUTUBE_REFERRER,
+        buildPlayerHtml(videoId),
+        "text/html",
+        "utf-8",
+        null,
+    )
+}
+
+/**
+ * Keeps only the characters YouTube video ids may contain, so the id cannot
+ * break out of the script string (defence in depth; the id is already validated
+ * upstream).
+ */
+private fun sanitizeVideoId(videoId: String): String =
+    videoId.filter { it.isLetterOrDigit() || it == '-' || it == '_' }.take(11)
+
+/** Maps the IFrame API error codes to short, user-facing messages. */
+private fun playerErrorMessage(code: Int): String = when (code) {
+    2 -> "Video ID tidak valid."
+    5 -> "Tidak dapat diputar di pemutar HTML5."
+    100 -> "Video tidak ditemukan atau bersifat privat."
+    101, 150 -> "Pemilik video melarang pemutaran di luar YouTube."
+    else -> "Kesalahan pemutar (kode $code)."
+}
 
 /**
  * Minimal HTML host for the official IFrame Player API. A single player is
@@ -130,13 +168,17 @@ private fun buildPlayerHtml(videoId: String): String = """
               videoId: '$videoId',
               playerVars: { 'playsinline': 1, 'rel': 0 },
               events: {
-                'onError': function(e) { onPlayerError(e.data); }
+                'onReady': function(e) { notifyState(e.target.getPlayerState()); },
+                'onStateChange': function(e) { notifyState(e.data); },
+                'onError': function(e) { notifyError(e.data); }
               }
             });
           }
-          function onPlayerError(code) {
-            // Report to the host app without leaking anything sensitive.
-            console.log('SMARTGHOST_PLAYER_ERROR:' + code);
+          function notifyState(state) {
+            if (window.SmartGhostBridge) { SmartGhostBridge.onStateChange(state); }
+          }
+          function notifyError(code) {
+            if (window.SmartGhostBridge) { SmartGhostBridge.onPlayerError(code); }
           }
         </script>
       </body>

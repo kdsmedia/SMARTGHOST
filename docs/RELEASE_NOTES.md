@@ -1,9 +1,9 @@
-# SMARTGHOST 1.0.0 — Release Notes
+# SMARTGHOST 1.0.1 — Release Notes
 
 **Brand:** ALTOMEDIA
 **Date:** 2026-11-09
 **Package:** `com.altomedia.smartghost`
-**versionCode / versionName:** `1` / `1.0.0`
+**versionCode / versionName:** `1` / `1.0.1`
 **Min / Target / Compile SDK:** 24 / 34 / 34
 
 ---
@@ -14,12 +14,25 @@
 | --- | --- |
 | File | `app/build/outputs/apk/release/app-release.apk` |
 | Size | ~1.4 MB |
-| SHA-256 | `5b28867dd1943facc6178844fba20b1b833adf1a2c04074c2d4922ffc22ca673` |
+| SHA-256 | `92c5c6eff1fcabd91e6b406026c1457bb0accba3313e06b3fc1c8a3b33e91f9b` |
 | Signature | APK Signature Scheme v2 — verified |
 | Signer | `CN=ALTOMEDIA, OU=SMARTGHOST, O=ALTOMEDIA, L=Jakarta, S=DKI Jakarta, C=ID` |
 | Key | RSA 4096-bit |
 
 > Recompute the SHA-256 after any rebuild: `sha256sum app/build/outputs/apk/release/app-release.apk`.
+
+## What changed in 1.0.1
+
+1.0.0 compiled, passed tests and was signed, but a functional audit found controls
+that were not reachable from the UI. 1.0.1 fixes them:
+
+- Diagnostics **START** is now a real button and runs checks.
+- **RELOAD** retries failed checks (it no longer opens a duplicate screen).
+- **HOME** stops the running session before navigating.
+- The player now reports **errors and play state** via a JavaScript bridge.
+- The **test timeout** setting is applied; **history** is really stored and
+  clearable.
+- Added an instrumented UI test; unit tests now 48, 0 failures.
 
 ## Highlights
 
@@ -73,7 +86,7 @@ prevents shipping future updates that install over this version.
 
 ## Verification steps performed
 
-1. `./gradlew testDebugUnitTest` — 46 tests, 0 failures.
+1. `./gradlew testDebugUnitTest` — 48 tests, 0 failures.
 2. `./gradlew :app:assembleDebug` — BUILD SUCCESSFUL.
 3. `./gradlew :app:assembleRelease` (with keystore env vars) — BUILD SUCCESSFUL.
 4. `apksigner verify --verbose --print-certs` — Verifies; v2 scheme true.

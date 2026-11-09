@@ -14,24 +14,31 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.altomedia.smartghost.coreui.component.PrimaryActionButton
 import com.altomedia.smartghost.coreui.component.StatusLevel
 import com.altomedia.smartghost.coreui.component.StatusPill
 import com.altomedia.smartghost.coreui.component.SmartCard
 import com.altomedia.smartghost.data.diagnostics.DiagnosticResult
 import com.altomedia.smartghost.data.diagnostics.DiagnosticStatus
+
+/** Stable test tag for the START button so UI tests do not depend on text. */
+const val StartButtonTag = "diagnostics_start_button"
 
 /**
  * Panel of ten diagnostic cards (Bab 8). Each card reports the status of one
@@ -41,7 +48,7 @@ import com.altomedia.smartghost.data.diagnostics.DiagnosticStatus
 @Composable
 fun DiagnosticsPanel(
     modifier: Modifier = Modifier,
-    viewModel: DiagnosticsViewModel = hiltViewModel(),
+    viewModel: DiagnosticsViewModel,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -69,6 +76,19 @@ fun DiagnosticsPanel(
             }
         }
 
+        PrimaryActionButton(
+            text = if (state.isRunning) "BERJALAN…" else "START",
+            icon = Icons.Filled.PlayArrow,
+            enabled = !state.isRunning,
+            onClick = viewModel::start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .testTag(StartButtonTag),
+        )
+
+        Spacer(Modifier.height(8.dp))
+
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             modifier = Modifier.fillMaxWidth(),
@@ -88,6 +108,30 @@ fun DiagnosticsPanel(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+
+        if (state.storeHistory) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Riwayat: ${state.history.size} baris tersimpan",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                TextButton(
+                    onClick = viewModel::clearHistory,
+                    enabled = state.history.isNotEmpty(),
+                ) {
+                    Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Hapus riwayat")
+                }
+            }
         }
 
         Text(

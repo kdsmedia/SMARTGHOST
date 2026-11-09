@@ -4,6 +4,38 @@ All notable changes to SMARTGHOST are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] — 2026-11-09
+
+Functional audit follow-up. The 1.0.0 build compiled, passed its tests and was
+signed, but a full audit found features that were unreachable from the UI. This
+release makes every advertised control actually work.
+
+### Fixed
+- **Diagnostics START was unreachable.** `DiagnosticsViewModel.start()` had no UI
+  caller, so the ten-card panel could never run a check. A START button is now in
+  the panel, and the ViewModel is hoisted to `SessionScreen`.
+- **RELOAD duplicated the session screen** instead of retrying. It now calls
+  `reloadFailed()` on the same ViewModel, retrying only failed cards.
+- **HOME did not stop diagnostics.** It now calls `stop()` before navigating, as
+  Bab 8 requires.
+- **Player reported nothing.** A JavaScript bridge now relays the IFrame Player
+  API's `onError`/`onStateChange` (and `onReady`) back to `PlayerViewModel`;
+  `domStorageEnabled` is enabled and the video id is sanitised. Player errors are
+  now shown to the user.
+- **Test timeout had no effect.** `EndpointChecker.check` takes a timeout and the
+  panel applies the value from Settings.
+- **History toggle was decorative.** A real, redacted, capped diagnostic history
+  is now stored when enabled, with a "Hapus riwayat" action.
+- `SafeLogger` is now actually used on the diagnostics path.
+
+### Added
+- Instrumented UI test (`feature-diagnostics/src/androidTest`) that drives the
+  real Compose panel and asserts START triggers checks.
+
+### Tests
+- 48 unit tests (was 46), 0 failures. New coverage: settings timeout propagation,
+  optional history record/clear.
+
 ## [1.0.0] — 2026-11-09
 
 First release. SMARTGHOST ships as a **YouTube URL checker and network diagnostics

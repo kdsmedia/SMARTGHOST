@@ -14,20 +14,26 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.altomedia.smartghost.coreui.component.SecondaryActionButton
 import com.altomedia.smartghost.feature.diagnostics.DiagnosticsPanel
+import com.altomedia.smartghost.feature.diagnostics.DiagnosticsViewModel
 import com.altomedia.smartghost.feature.player.PlayerScreen
 
 /**
  * Session screen (Bab 4): one official player plus the ten-card diagnostic
  * panel, with HOME and RELOAD controls in a bottom bar (Bab 8).
+ *
+ * The [DiagnosticsViewModel] is hoisted here so the bottom bar's RELOAD and HOME
+ * act on the same session the panel shows: RELOAD retries failed checks, HOME
+ * stops the running session safely before navigating away.
  */
 @Composable
 fun SessionScreen(
     videoId: String,
     onHome: () -> Unit,
     onOpenInYouTube: (String) -> Unit,
-    onReload: () -> Unit,
+    diagnosticsViewModel: DiagnosticsViewModel = hiltViewModel(),
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -41,13 +47,16 @@ fun SessionScreen(
                 SecondaryActionButton(
                     text = "HOME",
                     icon = Icons.Filled.Home,
-                    onClick = onHome,
+                    onClick = {
+                        diagnosticsViewModel.stop()
+                        onHome()
+                    },
                     modifier = Modifier.weight(1f),
                 )
                 SecondaryActionButton(
                     text = "RELOAD",
                     icon = Icons.Filled.Refresh,
-                    onClick = onReload,
+                    onClick = diagnosticsViewModel::reloadFailed,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -64,7 +73,10 @@ fun SessionScreen(
                 modifier = Modifier.padding(top = 8.dp),
             )
             // The diagnostics panel owns its own scrolling grid (Bab 8).
-            DiagnosticsPanel(modifier = Modifier.weight(1f))
+            DiagnosticsPanel(
+                viewModel = diagnosticsViewModel,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }
