@@ -4,6 +4,22 @@ All notable changes to SMARTGHOST are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.2] — 2026-11-09
+
+### Added
+- A ten-card monitoring wall on the session screen: five across, two down. Each
+  card shows the public YouTube thumbnail of the same single video plus its live
+  playback status. It is a preview wall — deliberately NOT ten players, and never
+  a viewer count.
+
+### Removed
+- The "Buka di aplikasi/situs YouTube" button. It is gone from the player screen
+  and the whole open-in-YouTube wiring was deleted.
+
+### Changed
+- `PlayerViewModel` is hoisted in the session screen so the player and the wall
+  share one status. 46 tests, 0 failures; lint 0 errors.
+
 ## [1.1.1] — 2026-11-09
 
 Fixed the embed: the player showed nothing. The root cause was the embed

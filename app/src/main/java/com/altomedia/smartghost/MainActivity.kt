@@ -1,15 +1,11 @@
 package com.altomedia.smartghost
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -63,7 +59,6 @@ private fun SmartGhostRoot(viewModel: RootViewModel = hiltViewModel()) {
 @Composable
 private fun SmartGhostNavHost() {
     val navController = rememberNavController()
-    val context = LocalContext.current
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
@@ -84,18 +79,10 @@ private fun SmartGhostNavHost() {
             SessionScreen(
                 videoId = videoId,
                 onHome = { navController.popBackStack(Routes.HOME, inclusive = false) },
-                onOpenInYouTube = { url -> openExternal(context, url) },
             )
         }
         composable(Routes.SETTINGS) {
             SettingsScreen(onBack = { navController.popBackStack() })
         }
     }
-}
-
-private fun openExternal(context: Context, url: String) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    runCatching { context.startActivity(intent) }
 }

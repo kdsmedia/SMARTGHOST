@@ -28,6 +28,7 @@ entirely by you.
 | --- | --- |
 | YouTube URL validation | Detects `watch`, `youtu.be`, `shorts`, `live`, and `embed` links and validates the video id. |
 | Single official playback | One embedded YouTube player (`youtube.com/embed/<id>`); play/pause follows user action only. |
+| Ten-card monitor | A 5 x 2 wall that previews the same video (thumbnail + live status). It is a monitor, not ten players and not a viewer count. |
 | Clear playback status | Reports the player's own ready / playing / error state so you can see whether the video runs. |
 | Open in YouTube | One tap to open the same video in the official YouTube app or site. |
 | Secret-safe logging | All logs pass through a redactor; no tokens, passwords, cookies, or keys are ever stored or logged. |

@@ -1,9 +1,9 @@
-# SMARTGHOST 1.1.1 — Release Notes
+# SMARTGHOST 1.1.2 — Release Notes
 
 **Brand:** ALTOMEDIA
 **Date:** 2026-11-09
 **Package:** `com.altomedia.smartghost`
-**versionCode / versionName:** `8` / `1.1.1`
+**versionCode / versionName:** `9` / `1.1.2`
 **Min / Target / Compile SDK:** 24 / 34 / 34
 
 ---
@@ -14,12 +14,20 @@
 | --- | --- |
 | File | `app/build/outputs/apk/release/app-release.apk` |
 | Size | ~1.4 MB |
-| SHA-256 | `95d81f4c56bbc2a95804084ae32a692e41c040f449601470fd9d02c9195d3d45` |
+| SHA-256 | `1e1136625192f2569764554ac51745de85ba4cdd13d9487290c72d6fa67dee86` |
 | Signature | APK Signature Scheme v2 — verified |
 | Signer | `CN=ALTOMEDIA, OU=SMARTGHOST, O=ALTOMEDIA, L=Jakarta, S=DKI Jakarta, C=ID` |
 | Key | RSA 4096-bit |
 
 > Recompute the SHA-256 after any rebuild: `sha256sum app/build/outputs/apk/release/app-release.apk`.
+
+## What changed in 1.1.2
+
+- Added the ten-card monitoring wall (5 x 2) on the session screen: each card
+  previews the same single video with its public thumbnail and live status. It is
+  a monitor, not ten players and not a viewer count.
+- Removed the "Buka di aplikasi/situs YouTube" button entirely.
+- 46 tests, 0 failures; lint 0 errors.
 
 ## What changed in 1.1.1
 

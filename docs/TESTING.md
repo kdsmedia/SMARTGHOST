@@ -36,11 +36,12 @@ Run all:
 | Suite | Cases | What it proves |
 | --- | --- | --- |
 | `YouTubeUrlParserTest` | 15 | `watch`, `youtu.be`, `shorts`, `live`, `embed`, and `youtube-nocookie` links parse; missing/invalid ids and non-YouTube hosts are rejected with the correct result type. |
+| `VideoWallTest` | 3 | The wall always builds exactly ten cards in five columns and two rows; every card previews the same single video, numbered 1–10; the thumbnail URL points at the official YouTube thumbnail host. |
 | `PlayerViewModelTest` | 5 | Playback state codes map to the right labels (playing / paused / buffering / ended), unknown codes are ignored, an error moves to the error state, and reloading clears the error. |
 | `SecretRedactorTest` | 10 | GitHub tokens, bearer tokens, password/api-key assignments, URL credentials, and JWTs are redacted; plain text is untouched. |
 | `HomeViewModelTest` | 5 | A valid YouTube link enables START; non-YouTube and malformed links are rejected; clearing the field returns to idle. |
 
-**Total: 31 pure unit tests + 12 runtime tests = 43 tests, 0 failures.**
+**Total: 34 pure unit tests + 12 runtime tests = 46 tests, 0 failures.**
 
 ### Why the URL parser is pure-JVM
 

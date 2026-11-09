@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,10 +26,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.webkit.WebViewAssetLoader
-import com.altomedia.smartghost.coreui.component.SecondaryActionButton
 import com.altomedia.smartghost.coreui.component.StatusDot
 import com.altomedia.smartghost.coreui.component.StatusLevel
 
@@ -54,9 +50,8 @@ import com.altomedia.smartghost.coreui.component.StatusLevel
 @Composable
 fun PlayerScreen(
     videoId: String,
-    onOpenInYouTube: (String) -> Unit,
+    viewModel: PlayerViewModel,
     modifier: Modifier = Modifier,
-    viewModel: PlayerViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val safeVideoId = sanitizeVideoId(videoId)
@@ -107,13 +102,6 @@ fun PlayerScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        SecondaryActionButton(
-            text = "Buka di aplikasi/situs YouTube",
-            icon = Icons.AutoMirrored.Filled.OpenInNew,
-            onClick = { onOpenInYouTube("https://www.youtube.com/watch?v=$safeVideoId") },
-            modifier = Modifier.fillMaxWidth(),
-        )
-
         state.lastError?.let { error ->
             Text(
                 text = "Pemutar: $error",
@@ -145,7 +133,7 @@ private fun PlaybackStatusRow(status: PlayerStatus, videoId: String) {
     Spacer(Modifier.height(2.dp))
 }
 
-private fun PlayerStatus.toStatusLevel(): StatusLevel = when (this) {
+internal fun PlayerStatus.toStatusLevel(): StatusLevel = when (this) {
     PlayerStatus.PLAYING -> StatusLevel.SUCCESS
     PlayerStatus.BUFFERING, PlayerStatus.LOADING -> StatusLevel.RUNNING
     PlayerStatus.ERROR -> StatusLevel.FAILURE
@@ -202,7 +190,7 @@ private fun WebView.loadPlayer(videoId: String) {
  * break out of the script string (defence in depth; the id is already validated
  * upstream).
  */
-internal fun sanitizeVideoId(videoId: String): String =
+fun sanitizeVideoId(videoId: String): String =
     videoId.filter { it.isLetterOrDigit() || it == '-' || it == '_' }.take(11)
 
 /** Maps the IFrame API error codes to short, user-facing messages. */

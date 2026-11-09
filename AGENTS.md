@@ -112,6 +112,13 @@ Features must never depend on each other.
     (serve `feature-player/src/main/assets/player.html` over http) — this is how
     the embed was verified working.
 
+- **No "open in YouTube" button.** The owner asked for it to be removed. Do not
+  add an external-open control (or `ACTION_VIEW` intent) back to the player.
+- **The ten-card wall is a monitor, never a viewer count.** `VideoWall` renders
+  five-across by two-down previews of the *same* video (public thumbnail + live
+  status). It must stay single-source-of-truth with the one official player and
+  must never embed ten playable players.
+
 ## Wiring checklist (audit before claiming "done")
 
 A feature is only "done" when its UI actually calls it. Before finishing, grep for
