@@ -26,12 +26,17 @@ change that pushes toward fake engagement must be refused.
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-./gradlew testDebugUnitTest            # 48 unit tests
+./gradlew testDebugUnitTest            # 55 tests (48 unit + 7 runtime)
 ./gradlew :app:assembleDebug           # debug APK
 ./gradlew :app:lintDebug               # 0 errors expected
 ./gradlew :app:assembleRelease         # signed release (needs env vars below)
 ./gradlew :feature-diagnostics:compileDebugAndroidTestKotlin  # UI tests compile
 ```
+
+Runtime tests run on the JVM via **Robolectric** (no device needed): they render
+real Compose, click real buttons, hit a real HTTP server (MockWebServer) and a
+real DataStore, and boot the real `Application`/Hilt graph. This is the primary
+proof the app "works", since no emulator is available in this container.
 
 Instrumented UI tests live in `feature-diagnostics/src/androidTest`. They need a
 device/emulator to RUN (none is installed in this container), but they must always

@@ -81,6 +81,9 @@ class OkHttpEndpointChecker @Inject constructor(
         is UnknownHostException -> "DNS gagal"
         is SocketTimeoutException -> "Timeout"
         is SSLException -> "TLS error"
+        is java.net.UnknownServiceException ->
+            "HTTP polos tidak diizinkan — gunakan https:// pada proxy.txt"
+        is java.net.SocketException -> "Koneksi ditolak"
         is IOException -> e.message?.let { "Koneksi gagal: $it" } ?: "Koneksi gagal"
         else -> e.javaClass.simpleName
     }

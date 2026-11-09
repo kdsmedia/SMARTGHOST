@@ -4,6 +4,27 @@ All notable changes to SMARTGHOST are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.2] — 2026-11-09
+
+Runtime verification on the JVM (no emulator available in this environment).
+The build no longer merely compiles: real Compose, a real HTTP server, a real
+DataStore, and the real Hilt/Application boot are all exercised at runtime.
+
+### Added
+- **Robolectric runtime tests** (7 new). They render the real Compose diagnostics
+  panel, click the real START button, drive the real ViewModel, hit a real HTTP
+  server via OkHttp, persist to a real DataStore, and boot the real `Application`.
+- Settings screen now lists the **authorised test endpoints** imported from
+  `proxy.txt` (Bab 4 "endpoint uji yang diizinkan").
+
+### Fixed
+- Plain-HTTP endpoints now return a clear message ("HTTP polos tidak diizinkan —
+  gunakan https:// pada proxy.txt") instead of a raw I/O error, since cleartext
+  traffic is disabled. Connection-refused is reported as "Koneksi ditolak".
+
+### Tests
+- 55 tests total (48 unit + 7 runtime), 0 failures.
+
 ## [1.0.1] — 2026-11-09
 
 Functional audit follow-up. The 1.0.0 build compiled, passed its tests and was

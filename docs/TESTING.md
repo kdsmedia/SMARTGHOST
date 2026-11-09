@@ -7,11 +7,27 @@ Follows Chapter 10 of the master plan.
 | Type | Scope | Status |
 | --- | --- | --- |
 | Unit | URL parser, proxy parser, input validation, status mapping | ✅ Implemented |
-| UI | Navigation, START / HOME / RELOAD, loading / error / success states | Manual (see below) |
-| Integration | QA endpoint connection, timeout, DNS failure, session cancel | ✅ Covered by `OkHttpEndpointCheckerTest` (MockWebServer) |
+| Runtime (Robolectric) | Real Compose click, real HTTP, real DataStore, real Application boot — on the JVM, no device | ✅ Implemented |
+| UI (instrumented) | Navigation, START / HOME / RELOAD, loading / error / success states | ✅ Compiles; run needs a device/emulator |
+| Integration | QA endpoint connection, timeout, DNS failure, session cancel | ✅ Covered by `OkHttpEndpointCheckerTest` + runtime tests (MockWebServer) |
 | Compatibility | Multiple Android versions and screen sizes | Recommended on device matrix |
 | Security | Secret scanning, cleartext check, permission review, log inspection | ✅ Enforced by `SecretRedactor` + manifest |
 | Manual | Wi-Fi / cellular / airplane mode, background/foreground, rotation | Recommended on a real device |
+
+## Runtime tests (Robolectric, no device required)
+
+These are the strongest automated evidence that the app *works* rather than merely
+compiles. They run on the JVM with `./gradlew testDebugUnitTest`.
+
+| Suite | Cases | What it proves |
+| --- | --- | --- |
+| `DiagnosticsPanelRuntimeTest` | 1 | The real Compose panel renders and its START button, when clicked, drives the real ViewModel to check the imported endpoints. |
+| `DiagnosticsIntegrationRuntimeTest` | 1 | Full stack: the real ViewModel calls the real OkHttp checker against a real HTTP server (MockWebServer) for ten endpoints; all ten cards reach `SUCCESS` and the server records ten requests. |
+| `DataStorePersistenceTest` | 4 | Settings and diagnostic history really persist in a real DataStore and read back; the timeout is clamped; secrets are redacted before storage. |
+| `AppBootsRuntimeTest` | 1 | The real `Application` (Hilt graph + manifest) instantiates without crashing. |
+
+The runtime suite always runs on the JVM; it needs no device. Instrumented tests in
+`androidTest` are a separate layer that only runs on a device.
 
 ## Automated unit tests
 
@@ -29,7 +45,7 @@ Run all:
 | `SecretRedactorTest` | 10 | GitHub tokens, bearer tokens, password/api-key assignments, URL credentials, and JWTs are redacted; plain text is untouched. |
 | `DiagnosticsViewModelTest` | 6 | Panel always exposes 10 cards; imported endpoints populate labels; START checks all endpoints; RELOAD retries only failed cards; empty-config start reports a note; STOP cancels the session. |
 
-**Total: 48 unit tests.**
+**Total: 48 pure unit tests + 7 runtime tests = 55 tests, 0 failures.**
 
 ### Why the parsers are pure-JVM
 

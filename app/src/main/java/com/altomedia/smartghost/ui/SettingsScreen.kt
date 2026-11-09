@@ -107,6 +107,38 @@ fun SettingsScreen(
                 onCheckedChange = viewModel::setStoreHistory,
             )
 
+            SmartCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text(
+                        text = "Endpoint uji yang diizinkan",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    if (state.authorizedEndpoints.isEmpty()) {
+                        Text(
+                            text = "Belum ada. Impor proxy.txt dari beranda untuk " +
+                                "mendaftarkan endpoint milik Anda.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    } else {
+                        Text(
+                            text = "Dari ${state.proxyFileName ?: "proxy.txt"} " +
+                                "(${state.authorizedEndpoints.size} endpoint):",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        state.authorizedEndpoints.take(10).forEach { endpoint ->
+                            Text(
+                                text = "${endpoint.index}. ${endpoint.url}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
+            }
+
             SectionLabel("PRIVASI")
             SmartCard(modifier = Modifier.fillMaxWidth()) {
                 Text(

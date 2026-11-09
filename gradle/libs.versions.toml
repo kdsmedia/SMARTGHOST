@@ -16,6 +16,8 @@ junit = "4.13.2"
 androidxTestJunit = "1.2.1"
 espresso = "3.6.1"
 mockk = "1.13.11"
+robolectric = "4.12.2"
+androidxTestCore = "1.5.0"
 turbine = "1.1.0"
 
 [libraries]
@@ -52,6 +54,9 @@ androidx-test-espresso-core = { group = "androidx.test.espresso", name = "espres
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "androidxTestCore" }
 turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
 
 [plugins]

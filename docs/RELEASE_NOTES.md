@@ -1,9 +1,9 @@
-# SMARTGHOST 1.0.1 — Release Notes
+# SMARTGHOST 1.0.2 — Release Notes
 
 **Brand:** ALTOMEDIA
 **Date:** 2026-11-09
 **Package:** `com.altomedia.smartghost`
-**versionCode / versionName:** `1` / `1.0.1`
+**versionCode / versionName:** `3` / `1.0.2`
 **Min / Target / Compile SDK:** 24 / 34 / 34
 
 ---
@@ -14,12 +14,25 @@
 | --- | --- |
 | File | `app/build/outputs/apk/release/app-release.apk` |
 | Size | ~1.4 MB |
-| SHA-256 | `92c5c6eff1fcabd91e6b406026c1457bb0accba3313e06b3fc1c8a3b33e91f9b` |
+| SHA-256 | `b867949092e320f87ade73681a2d990d492c5e62d1a491a69832ea362cf3a12c` |
 | Signature | APK Signature Scheme v2 — verified |
 | Signer | `CN=ALTOMEDIA, OU=SMARTGHOST, O=ALTOMEDIA, L=Jakarta, S=DKI Jakarta, C=ID` |
 | Key | RSA 4096-bit |
 
 > Recompute the SHA-256 after any rebuild: `sha256sum app/build/outputs/apk/release/app-release.apk`.
+
+## What changed in 1.0.2
+
+Verification moved from "it compiles" to "it runs". No emulator is available in
+this environment, so runtime evidence is produced on the JVM with **Robolectric**:
+
+- Seven runtime tests now render real Compose, click the real START button, call
+  the real OkHttp checker against a real HTTP server, persist to a real DataStore,
+  and boot the real `Application` (Hilt) — all without a device.
+- Settings now lists the **authorised test endpoints** imported from `proxy.txt`.
+- Clearer messages: plain-HTTP endpoints explain that `https://` is required;
+  connection-refused is reported as "Koneksi ditolak".
+- 55 tests total (48 unit + 7 runtime), 0 failures; lint 0 errors.
 
 ## What changed in 1.0.1
 
