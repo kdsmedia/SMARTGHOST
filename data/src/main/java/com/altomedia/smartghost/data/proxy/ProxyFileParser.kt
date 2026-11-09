@@ -4,12 +4,18 @@ package com.altomedia.smartghost.data.proxy
  * A single validated proxy endpoint from proxy.txt. These endpoints are used
  * ONLY to test connectivity to servers the user owns or is authorised to test
  * (Bab 7). SMARTGHOST never uses proxies to disguise viewers or evade limits.
+ *
+ * Optional [username]/[password] come from `ip:port:user:pass` or
+ * `user:pass@host:port` lines; they are needed when the proxy demands
+ * authentication for the connectivity probe.
  */
 data class ProxyEndpoint(
     val host: String,
     val port: Int,
     val scheme: String,
     val sourceLine: Int,
+    val username: String? = null,
+    val password: String? = null,
 ) {
     val display: String get() = "$scheme://$host:$port"
 }
@@ -66,6 +72,8 @@ object ProxyFileParser {
                             port = parsed.port,
                             scheme = parsed.scheme,
                             sourceLine = lineNumber,
+                            username = parsed.username,
+                            password = parsed.password,
                         )
                     } else {
                         duplicates++
@@ -84,7 +92,13 @@ object ProxyFileParser {
     }
 
     private sealed interface LineResult {
-        data class Ok(val host: String, val port: Int, val scheme: String) : LineResult
+        data class Ok(
+            val host: String,
+            val port: Int,
+            val scheme: String,
+            val username: String? = null,
+            val password: String? = null,
+        ) : LineResult
         data class Err(val reason: String) : LineResult
     }
 
@@ -103,14 +117,36 @@ object ProxyFileParser {
             remainder = line
         }
 
-        // Drop optional userinfo ("user:pass@host:port"); only host and port are
-        // used for the connectivity check.
-        val hostPort = remainder.substringAfterLast('@')
+        // Split off optional userinfo ("user:pass@host:port").
+        var hostPort = remainder
+        var username: String? = null
+        var password: String? = null
+        val at = remainder.lastIndexOf('@')
+        if (at >= 0) {
+            val userInfo = remainder.substring(0, at)
+            hostPort = remainder.substring(at + 1)
+            if (userInfo.isNotEmpty()) {
+                val sep = userInfo.indexOf(':')
+                if (sep >= 0) {
+                    username = userInfo.substring(0, sep).ifEmpty { null }
+                    password = userInfo.substring(sep + 1).ifEmpty { null }
+                } else {
+                    username = userInfo
+                }
+            }
+        }
+
         val parts = hostPort.split(":")
         // Accept "host:port" and the common list format "host:port:user:pass".
-        if (parts.size != 2 && parts.size != 4) {
-            return LineResult.Err("Format harus host:port atau skema://host:port.")
+        if (parts.size == 4) {
+            username = parts[2].ifEmpty { null }
+            password = parts[3].ifEmpty { null }
+        } else if (parts.size != 2) {
+            return LineResult.Err(
+                "Format harus host:port, host:port:user:pass, atau skema://host:port.",
+            )
         }
+
         val host = parts[0].trim()
         val portText = parts[1].trim()
 
@@ -123,6 +159,6 @@ object ProxyFileParser {
             return LineResult.Err("Port $port di luar rentang 1-65535.")
         }
 
-        return LineResult.Ok(host, port, scheme)
+        return LineResult.Ok(host, port, scheme, username, password)
     }
 }

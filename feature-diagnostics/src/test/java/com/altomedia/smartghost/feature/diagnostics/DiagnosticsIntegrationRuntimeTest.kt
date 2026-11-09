@@ -67,7 +67,12 @@ class DiagnosticsIntegrationRuntimeTest {
             )
         }
         val viewModel = DiagnosticsViewModel(
-            checker = OkHttpEndpointChecker(HttpClientFactory.create()),
+            checker = OkHttpEndpointChecker(
+                HttpClientFactory.create(),
+                // Plain-HTTP probe target: the local server acts as the proxy and
+                // answers the absolute-form request OkHttp sends it.
+                probeUrl = "http://smartghost.test/generate_204",
+            ),
             sessionRepository = session,
             settingsRepository = SettingsRepository(context),
             historyRepository = DiagnosticHistoryRepository(context),

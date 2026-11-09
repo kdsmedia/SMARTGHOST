@@ -63,7 +63,11 @@ class SessionRepository @Inject constructor() {
     private fun ProxyEndpoint.toTestEndpoint(index: Int) = TestEndpoint(
         index = index,
         label = "$host:$port",
-        url = "$scheme://$host:$port",
+        host = host,
+        port = port,
+        scheme = scheme,
+        username = username,
+        password = password,
     )
 
     companion object {
