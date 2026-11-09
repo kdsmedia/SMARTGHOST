@@ -27,3 +27,7 @@ captures/
 *.class
 output.json
 release/
+
+# Explicitly publish build artifacts + keystore per repository owner request
+!dist/
+!dist/**
