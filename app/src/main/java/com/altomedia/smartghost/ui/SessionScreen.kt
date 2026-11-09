@@ -1,0 +1,70 @@
+package com.altomedia.smartghost.ui
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.altomedia.smartghost.coreui.component.SecondaryActionButton
+import com.altomedia.smartghost.feature.diagnostics.DiagnosticsPanel
+import com.altomedia.smartghost.feature.player.PlayerScreen
+
+/**
+ * Session screen (Bab 4): one official player plus the ten-card diagnostic
+ * panel, with HOME and RELOAD controls in a bottom bar (Bab 8).
+ */
+@Composable
+fun SessionScreen(
+    videoId: String,
+    onHome: () -> Unit,
+    onOpenInYouTube: (String) -> Unit,
+    onReload: () -> Unit,
+) {
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                SecondaryActionButton(
+                    text = "HOME",
+                    icon = Icons.Filled.Home,
+                    onClick = onHome,
+                    modifier = Modifier.weight(1f),
+                )
+                SecondaryActionButton(
+                    text = "RELOAD",
+                    icon = Icons.Filled.Refresh,
+                    onClick = onReload,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        },
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+        ) {
+            PlayerScreen(
+                videoId = videoId,
+                onOpenInYouTube = onOpenInYouTube,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            // The diagnostics panel owns its own scrolling grid (Bab 8).
+            DiagnosticsPanel(modifier = Modifier.weight(1f))
+        }
+    }
+}

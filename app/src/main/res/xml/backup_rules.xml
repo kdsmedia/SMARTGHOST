@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SMARTGHOST stores no personal data and no secrets. Backups are disabled and
+  no application data is included (Bab 3, 9).
+-->
+<full-backup-content>
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="file" path="." />
+</full-backup-content>
