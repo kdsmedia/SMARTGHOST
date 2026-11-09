@@ -1,9 +1,9 @@
-# SMARTGHOST 1.1.0 — Release Notes
+# SMARTGHOST 1.1.1 — Release Notes
 
 **Brand:** ALTOMEDIA
 **Date:** 2026-11-09
 **Package:** `com.altomedia.smartghost`
-**versionCode / versionName:** `7` / `1.1.0`
+**versionCode / versionName:** `8` / `1.1.1`
 **Min / Target / Compile SDK:** 24 / 34 / 34
 
 ---
@@ -14,12 +14,28 @@
 | --- | --- |
 | File | `app/build/outputs/apk/release/app-release.apk` |
 | Size | ~1.4 MB |
-| SHA-256 | `8cab108e68685c6bcf38f33a236bfee70288b7748d2fbb7ac35d96559d6408e4` |
+| SHA-256 | `95d81f4c56bbc2a95804084ae32a692e41c040f449601470fd9d02c9195d3d45` |
 | Signature | APK Signature Scheme v2 — verified |
 | Signer | `CN=ALTOMEDIA, OU=SMARTGHOST, O=ALTOMEDIA, L=Jakarta, S=DKI Jakarta, C=ID` |
 | Key | RSA 4096-bit |
 
 > Recompute the SHA-256 after any rebuild: `sha256sum app/build/outputs/apk/release/app-release.apk`.
+
+## What changed in 1.1.1
+
+Fixed the embed: the player showed nothing. The root cause was the embed
+mechanism, not the network.
+
+- The player page now embeds YouTube's official player as a **plain
+  `youtube.com/embed/<id>` iframe**. The previous approach used the `YT.Player`
+  JavaScript API from `iframe_api`, which was fragile in the WebView and rendered
+  nothing.
+- Verified working end to end: serving `player.html` over http and opening it in
+  a browser plays the video from the URL (video element + progress confirmed).
+- Added a visible playback status and the embedded video id under the player.
+- If the embed cannot load, the page shows a message instead of an empty black
+  box.
+- 43 tests, 0 failures; lint 0 errors.
 
 ## What changed in 1.1.0
 

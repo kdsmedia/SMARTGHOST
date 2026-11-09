@@ -1,6 +1,7 @@
 package com.altomedia.smartghost.feature.player
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
@@ -9,9 +10,13 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.unit.dp
@@ -26,17 +32,19 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.webkit.WebViewAssetLoader
 import com.altomedia.smartghost.coreui.component.SecondaryActionButton
+import com.altomedia.smartghost.coreui.component.StatusDot
+import com.altomedia.smartghost.coreui.component.StatusLevel
 
 /**
- * Single official YouTube player (Bab 6). Uses the YouTube IFrame Player API so
- * playback follows YouTube's rules and is driven only by the user's play/pause
- * actions. SMARTGHOST never creates multiple players or manipulates view counts.
+ * Single official YouTube player (Bab 6). The page embeds YouTube's official
+ * `youtube.com/embed/<id>` player as a plain iframe, so playback follows
+ * YouTube's rules and is driven only by the user's play/pause actions.
+ * SMARTGHOST never creates multiple players or manipulates view counts.
  *
  * The host page is served from [PLAYER_ORIGIN] via [WebViewAssetLoader] rather
  * than `loadDataWithBaseURL`. A `data:` document has no real origin, so the
- * WebView sends no `Referer`/`Origin` to YouTube and the IFrame player refuses
- * to start with error 153 ("Video player configuration error"). Serving from a
- * real `https://` origin fixes that.
+ * embedded frame receives no `Referer` and YouTube may refuse playback. Serving
+ * from a real `https://` origin fixes that.
  *
  * A minimal JavaScript bridge relays the player's own error and state-change
  * callbacks back to the ViewModel so the UI can show honest status. The bridge
@@ -90,6 +98,8 @@ fun PlayerScreen(
             },
         )
 
+        PlaybackStatusRow(status = state.status, videoId = safeVideoId)
+
         Text(
             text = "Pemutaran dikendalikan sepenuhnya oleh Anda melalui pemutar " +
                 "resmi YouTube.",
@@ -114,6 +124,34 @@ fun PlayerScreen(
     }
 }
 
+/** Dot + label for the current playback state, plus the embedded video id. */
+@Composable
+private fun PlaybackStatusRow(status: PlayerStatus, videoId: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        StatusDot(level = status.toStatusLevel())
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = status.label,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = "• video $videoId",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    Spacer(Modifier.height(2.dp))
+}
+
+private fun PlayerStatus.toStatusLevel(): StatusLevel = when (this) {
+    PlayerStatus.PLAYING -> StatusLevel.SUCCESS
+    PlayerStatus.BUFFERING, PlayerStatus.LOADING -> StatusLevel.RUNNING
+    PlayerStatus.ERROR -> StatusLevel.FAILURE
+    else -> StatusLevel.NEUTRAL
+}
+
 private const val BRIDGE_NAME = "SmartGhostBridge"
 
 /**
@@ -131,7 +169,7 @@ internal fun playerUrl(videoId: String): String =
     "$PLAYER_ORIGIN/assets/player.html?videoId=" + Uri.encode(videoId)
 
 /** Builds the asset loader that serves the bundled player page from an https origin. */
-internal fun playerAssetLoader(context: android.content.Context): WebViewAssetLoader =
+internal fun playerAssetLoader(context: Context): WebViewAssetLoader =
     WebViewAssetLoader.Builder()
         .addPathHandler(PLAYER_ASSET_PATH, WebViewAssetLoader.AssetsPathHandler(context))
         .build()
@@ -143,9 +181,15 @@ private class PlayerBridge(private val viewModel: PlayerViewModel) {
         viewModel.onError(playerErrorMessage(code))
     }
 
+    /** Fallback text from the page itself (offline, blocked, or slow network). */
+    @JavascriptInterface
+    fun onPlayerErrorText(message: String) {
+        viewModel.onError(message)
+    }
+
     @JavascriptInterface
     fun onStateChange(state: Int) {
-        viewModel.onPlaybackStateChanged(state == 1)
+        viewModel.onPlaybackStateChanged(state)
     }
 }
 

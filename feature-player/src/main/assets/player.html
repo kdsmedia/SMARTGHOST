@@ -2,46 +2,85 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- YouTube rejects embeds whose page sends no Referer (IFrame error 153).
-         Serving this page from https://appassets.androidplatform.net gives the
-         document a real https origin, and this policy sends that origin as the
-         Referer for the player's cross-origin requests. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- The player page is served from a real https origin
+         (https://appassets.androidplatform.net) so the embedded YouTube frame
+         receives a Referer. This policy sends only the origin cross-site. -->
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <style>
       html, body { margin: 0; padding: 0; background: #000; height: 100%; overflow: hidden; }
-      #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+      #frame, #player iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+      #fallback {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: none; align-items: center; justify-content: center;
+        color: #9fb3c8; font: 13px/1.5 sans-serif; text-align: center; padding: 16px;
+        box-sizing: border-box;
+      }
     </style>
   </head>
   <body>
     <div id="player"></div>
+    <div id="fallback">Memuat…</div>
     <script>
       var videoId = new URLSearchParams(location.search).get('videoId') || '';
-      var tag = document.createElement('script');
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.head.appendChild(tag);
 
-      var player;
-      function onYouTubeIframeAPIReady() {
-        player = new YT.Player('player', {
-          videoId: videoId,
-          playerVars: {
-            'playsinline': 1,
-            'rel': 0,
-            'origin': location.origin
-          },
-          events: {
-            'onReady': function(e) { notifyState(e.target.getPlayerState()); },
-            'onStateChange': function(e) { notifyState(e.data); },
-            'onError': function(e) { notifyError(e.data); }
+      function bridge() { return window.SmartGhostBridge; }
+      function notifyState(state) { if (bridge()) { bridge().onStateChange(state); } }
+      function notifyError(code) { if (bridge()) { bridge().onPlayerError(code); } }
+      function notifyErrorText(message) { if (bridge()) { bridge().onPlayerErrorText(message); } }
+      function showFallback(message) {
+        var node = document.getElementById('fallback');
+        if (node) { node.textContent = message; node.style.display = 'flex'; }
+        notifyErrorText(message);
+      }
+
+      if (!videoId) {
+        showFallback('ID video tidak ditemukan pada tautan.');
+      } else {
+        // Plain iframe embed of the official player. The embed page manages its
+        // own origin/Referer, which is far more reliable in a WebView than the
+        // YT.Player JavaScript API. enablejsapi lets us receive status events
+        // over postMessage; if that handshake is unavailable the video still
+        // plays normally.
+        var origin = location.origin;
+        var src = 'https://www.youtube.com/embed/' + encodeURIComponent(videoId) +
+          '?playsinline=1&rel=0&enablejsapi=1&origin=' + encodeURIComponent(origin);
+
+        var frame = document.createElement('iframe');
+        frame.id = 'frame';
+        frame.src = src;
+        frame.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+        frame.setAttribute('allowfullscreen', 'true');
+        frame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+        document.getElementById('player').appendChild(frame);
+
+        // Listen to the official player's own state events (postMessage protocol).
+        window.addEventListener('message', function (event) {
+          var data;
+          try {
+            data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          } catch (err) {
+            return;
           }
+          if (!data || !data.event) { return; }
+          if (data.event === 'onReady') { notifyState(-1); }
+          else if (data.event === 'onStateChange') { notifyState(data.info); }
+          else if (data.event === 'onError') { notifyError(data.info); }
         });
-      }
-      function notifyState(state) {
-        if (window.SmartGhostBridge) { SmartGhostBridge.onStateChange(state); }
-      }
-      function notifyError(code) {
-        if (window.SmartGhostBridge) { SmartGhostBridge.onPlayerError(code); }
+
+        function startListening() {
+          try {
+            frame.contentWindow.postMessage(
+              JSON.stringify({ event: 'listening', id: 'smartghost', channel: 'widget' }),
+              '*'
+            );
+          } catch (err) { /* status only; playback is unaffected */ }
+        }
+        frame.addEventListener('load', function () {
+          startListening();
+          setTimeout(startListening, 600);
+          setTimeout(startListening, 1800);
+        });
       }
     </script>
   </body>

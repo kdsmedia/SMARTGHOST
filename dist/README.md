@@ -10,13 +10,13 @@
 
 | File | Versi | Ukuran | SHA-256 |
 | --- | --- | --- | --- |
-| `smartghost-1.1.0-release.apk` | 1.1.0 (versionCode 7), bertanda tangan | ~1.4 MB | `8cab108e68685c6bcf38f33a236bfee70288b7748d2fbb7ac35d96559d6408e4` |
-| `smartghost-1.1.0-debug.apk` | 1.1.0 (versionCode 7), debug | ~17 MB | `ad009bb1c0fa9463d8baa5a1d12f52e7b8294c0ace0ffbd58a37601e5125e8d9` |
+| `smartghost-1.1.1-release.apk` | 1.1.1 (versionCode 8), bertanda tangan | ~1.4 MB | `95d81f4c56bbc2a95804084ae32a692e41c040f449601470fd9d02c9195d3d45` |
+| `smartghost-1.1.1-debug.apk` | 1.1.1 (versionCode 8), debug | ~17 MB | `487b63e29cff25e23953d629c50adc673ddea98a94092371f0655b8e42002a8b` |
 
 Verifikasi tanda tangan:
 
 ```bash
-apksigner verify --verbose smartghost-1.1.0-release.apk
+apksigner verify --verbose smartghost-1.1.1-release.apk
 ```
 
 ## Keystore rilis

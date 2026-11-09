@@ -20,7 +20,7 @@ compiles. They run on the JVM with `./gradlew testDebugUnitTest`.
 | Suite | Cases | What it proves |
 | --- | --- | --- |
 | `DataStorePersistenceTest` | 1 | The dark-theme setting really persists in a real DataStore and reads back. |
-| `PlayerAssetRuntimeTest` | 4 | The bundled player page is really served from `https://appassets.androidplatform.net` by a real `WebViewAssetLoader` (so the WebView sends a Referer and YouTube does not reject it with error 153); the page contains the IFrame API and referrer policy; error 153 maps to a specific message. |
+| `PlayerAssetRuntimeTest` | 6 | The bundled player page is really served from `https://appassets.androidplatform.net` by a real `WebViewAssetLoader` (so the embedded YouTube frame gets a Referer); the page embeds `youtube.com/embed/<id>` with `playsinline`, allows fullscreen, and has a fallback UI instead of an empty black box. |
 | `AppBootsRuntimeTest` | 1 | The real `Application` (Hilt graph + manifest) instantiates without crashing. |
 
 The runtime suite always runs on the JVM; it needs no device.
@@ -36,10 +36,11 @@ Run all:
 | Suite | Cases | What it proves |
 | --- | --- | --- |
 | `YouTubeUrlParserTest` | 15 | `watch`, `youtu.be`, `shorts`, `live`, `embed`, and `youtube-nocookie` links parse; missing/invalid ids and non-YouTube hosts are rejected with the correct result type. |
+| `PlayerViewModelTest` | 5 | Playback state codes map to the right labels (playing / paused / buffering / ended), unknown codes are ignored, an error moves to the error state, and reloading clears the error. |
 | `SecretRedactorTest` | 10 | GitHub tokens, bearer tokens, password/api-key assignments, URL credentials, and JWTs are redacted; plain text is untouched. |
 | `HomeViewModelTest` | 5 | A valid YouTube link enables START; non-YouTube and malformed links are rejected; clearing the field returns to idle. |
 
-**Total: 26 pure unit tests + 10 runtime tests = 36 tests, 0 failures.**
+**Total: 31 pure unit tests + 12 runtime tests = 43 tests, 0 failures.**
 
 ### Why the URL parser is pure-JVM
 

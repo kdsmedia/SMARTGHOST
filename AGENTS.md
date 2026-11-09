@@ -64,7 +64,7 @@ core-ui              → theme + shared components (no data deps)
 data                 → YouTube URL parser + settings DataStore, Hilt DI
 security             → SecretRedactor, SafeLogger (no Android UI)
 feature-home         → data, core-ui, security
-feature-player       → core-ui (official IFrame player)
+feature-player       → core-ui (official YouTube embed player)
 ```
 
 Features must never depend on each other.
@@ -95,16 +95,22 @@ Features must never depend on each other.
 - Lint warnings are dependency-freshness only (no errors).
 - Unit tests that touch `android.util.Log` (via `SafeLogger`) need
   `testOptions { unitTests.isReturnDefaultValues = true }` in that module.
-- A `@Composable` default parameter `hiltViewModel()` creates a SECOND ViewModel
-  instance when a caller also hoists one. Never default a hoisted VM — take it as
-  a required parameter (see `DiagnosticsPanel`).
-- **YouTube IFrame error 153** ("Video player configuration error") means the host
-  page sent no `Referer`/`Origin`. `loadDataWithBaseURL` gives the document a
-  `data:` origin, which YouTube rejects. Serve the player page from a real https
-  origin instead: put it in `assets/` and load it via `WebViewAssetLoader`
+- **The player must embed `https://www.youtube.com/embed/<id>` as a plain iframe**
+  inside a host page served from a real https origin via `WebViewAssetLoader`
   (`https://appassets.androidplatform.net/assets/player.html`), with
-  `<meta name="referrer" content="strict-origin-when-cross-origin">`. Do not go
-  back to `loadDataWithBaseURL` for the player.
+  `<meta name="referrer" content="strict-origin-when-cross-origin">`.
+  - Do NOT go back to `loadDataWithBaseURL`: a `data:` origin sends no `Referer`
+    and the embed refuses to play.
+  - Do NOT go back to the `YT.Player` / `iframe_api` JavaScript approach. It was
+    fragile in the WebView (needed the `iframe_api` script and an `origin`
+    handshake) and in practice showed nothing. The plain iframe always renders.
+  - Playback status is best-effort: the page posts `{event:'listening'}` to the
+    frame over `postMessage` and relays the player's `onStateChange`/`onError`
+    back through the `SmartGhostBridge` JS interface. If that handshake is
+    unavailable the video still plays; status just stays at "Memuat…".
+  - If the video ever shows nothing, open the host page in a normal browser
+    (serve `feature-player/src/main/assets/player.html` over http) — this is how
+    the embed was verified working.
 
 ## Wiring checklist (audit before claiming "done")
 

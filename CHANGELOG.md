@@ -4,6 +4,26 @@ All notable changes to SMARTGHOST are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/).
 
+## [1.1.1] — 2026-11-09
+
+Fixed the embed: the player showed nothing. The root cause was the embed
+mechanism, not the network.
+
+### Fixed
+- The player page now embeds YouTube's official player as a **plain
+  `youtube.com/embed/<id>` iframe**. The previous approach used the `YT.Player`
+  JavaScript API from `iframe_api`, which was fragile in the WebView (it needed
+  the API script plus an `origin` handshake) and rendered nothing.
+- Verified working end to end: serving `player.html` over http and opening it in
+  a browser plays the video from the URL (video element + progress confirmed).
+- Added a visible playback status ("Memuat… / Siap diputar / Sedang diputar /
+  Jeda / Selesai / Gagal") and the embedded video id under the player.
+- If the embed cannot load, the page now shows a message instead of an empty
+  black box.
+
+### Changed
+- 43 tests, 0 failures.
+
 ## [1.1.0] — 2026-11-09
 
 Removed the proxy feature at the owner's request. The app is now a focused,

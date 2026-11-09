@@ -5,7 +5,7 @@
 **Platform:** Android (Kotlin · Jetpack Compose · Material 3 · MVVM)
 
 SMARTGHOST is a **YouTube link checker and player**. It validates a YouTube URL and
-opens that video through the **official YouTube IFrame Player API**, controlled
+opens that video through YouTube's **official embed player**, controlled
 entirely by you.
 
 > ### ⚠️ Scope statement — please read first
@@ -27,7 +27,7 @@ entirely by you.
 | Capability | Description |
 | --- | --- |
 | YouTube URL validation | Detects `watch`, `youtu.be`, `shorts`, `live`, and `embed` links and validates the video id. |
-| Single official playback | One YouTube player via the official IFrame Player API; play/pause follows user action only. |
+| Single official playback | One embedded YouTube player (`youtube.com/embed/<id>`); play/pause follows user action only. |
 | Clear playback status | Reports the player's own ready / playing / error state so you can see whether the video runs. |
 | Open in YouTube | One tap to open the same video in the official YouTube app or site. |
 | Secret-safe logging | All logs pass through a redactor; no tokens, passwords, cookies, or keys are ever stored or logged. |
@@ -50,7 +50,7 @@ SMARTGHOST/
 ├── data/             # YouTube URL parser + settings DataStore (pure-JVM where possible)
 ├── security/         # SecretRedactor + SafeLogger (log redaction)
 ├── feature-home/     # URL input + START
-└── feature-player/   # Single official YouTube player (IFrame Player API)
+└── feature-player/   # Single official YouTube embed player
 ```
 
 Dependency direction: `feature-* → data / core-ui / security → app`.
@@ -125,7 +125,7 @@ Unit tests cover the URL parser and the secret redactor. See
 1. YouTube — Fake engagement policy: <https://support.google.com/youtube/answer/3399767>
 2. Android — Sign your app: <https://developer.android.com/studio/publish/app-signing>
 3. Android — App architecture: <https://developer.android.com/topic/architecture>
-4. YouTube — IFrame Player API: <https://developers.google.com/youtube/iframe_api_reference>
+4. YouTube — Embed a video: <https://developers.google.com/youtube/player_parameters>
 
 ---
 
