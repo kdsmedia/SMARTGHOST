@@ -4,6 +4,31 @@ All notable changes to SMARTGHOST are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.5] — 2026-11-09
+
+Fix for "proxy selalu gagal menonton".
+
+### Fixed
+- **The proxy check never actually used the proxy.** `OkHttpEndpointChecker`
+  sent a `HEAD` request straight to the proxy's `host:port`, and cleartext was
+  blocked by the network security config, so every entry failed with
+  "HTTP polos tidak diizinkan — gunakan https:// pada proxy.txt". It now routes
+  the probe *through* the proxy:
+  - `http`/`https` proxies: OkHttp is pointed at the proxy and asked to reach a
+    real YouTube endpoint over TLS (so the proxy must tunnel with `CONNECT`);
+    proxy credentials are supplied via a proxy authenticator.
+  - `socks`/`socks5` proxies: a real SOCKS5 handshake, including user/pass
+    negotiation when credentials are present.
+- **Proxy credentials are no longer discarded.** `ProxyFileParser` keeps the
+  user/pass from `ip:port:user:pass` and `user:pass@host:port`, and
+  `TestEndpoint` carries them so authenticated proxies can be probed.
+- A green card now means "this proxy really carries traffic to YouTube", not a
+  bare TCP connect.
+
+### Tests
+- `OkHttpEndpointCheckerTest` rewritten around a local forward HTTP proxy, plus a
+  non-SOCKS server case. 78 tests, 0 failures.
+
 ## [1.0.4] — 2026-11-09
 
 Session console rework plus two layout/robustness fixes requested by the user.

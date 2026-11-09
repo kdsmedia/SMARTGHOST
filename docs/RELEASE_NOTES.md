@@ -1,9 +1,9 @@
-# SMARTGHOST 1.0.4 — Release Notes
+# SMARTGHOST 1.0.5 — Release Notes
 
 **Brand:** ALTOMEDIA
 **Date:** 2026-11-09
 **Package:** `com.altomedia.smartghost`
-**versionCode / versionName:** `5` / `1.0.4`
+**versionCode / versionName:** `6` / `1.0.5`
 **Min / Target / Compile SDK:** 24 / 34 / 34
 
 ---
@@ -14,12 +14,19 @@
 | --- | --- |
 | File | `app/build/outputs/apk/release/app-release.apk` |
 | Size | ~1.4 MB |
-| SHA-256 | `f36a4ff5b04b4e5de57356404288e771e156d14eb1acadf9e04ff7083a42a0da` |
+| SHA-256 | `383a49495434d80c781a8345834f5bec761d7972cde15dd4a55ed3304bbac2ec` |
 | Signature | APK Signature Scheme v2 — verified |
 | Signer | `CN=ALTOMEDIA, OU=SMARTGHOST, O=ALTOMEDIA, L=Jakarta, S=DKI Jakarta, C=ID` |
 | Key | RSA 4096-bit |
 
 > Recompute the SHA-256 after any rebuild: `sha256sum app/build/outputs/apk/release/app-release.apk`.
+
+## What changed in 1.0.5
+
+- Proxy checks now route traffic *through* the proxy (http/https via CONNECT,
+  socks5 via a real handshake) and keep proxy credentials, so reachable proxies
+  stop failing.
+- 78 tests, 0 failures.
 
 ## What changed in 1.0.4
 
