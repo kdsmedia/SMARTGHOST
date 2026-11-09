@@ -20,6 +20,21 @@ class ProxyFileParserTest {
     }
 
     @Test
+    fun `utf8 byte order mark is stripped`() {
+        val result = ProxyFileParser.parse("\uFEFF1.2.3.4:8080\n5.6.7.8:9090")
+        assertEquals(2, result.endpoints.size)
+        assertTrue(result.errors.isEmpty())
+        assertEquals("1.2.3.4", result.endpoints.first().host)
+    }
+
+    @Test
+    fun `carriage return line endings are handled`() {
+        val result = ProxyFileParser.parse("1.2.3.4:8080\r\n5.6.7.8:9090\r\n")
+        assertEquals(2, result.endpoints.size)
+        assertTrue(result.errors.isEmpty())
+    }
+
+    @Test
     fun `host port lines are parsed with default scheme`() {
         val result = ProxyFileParser.parse("127.0.0.1:8080")
         assertEquals(1, result.endpoints.size)

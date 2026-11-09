@@ -101,6 +101,15 @@ Features must never depend on each other. Cross-feature state goes through a
 - A `@Composable` default parameter `hiltViewModel()` creates a SECOND ViewModel
   instance when a caller also hoists one. Never default a hoisted VM — take it as
   a required parameter (see `DiagnosticsPanel`).
+- **YouTube IFrame error 153** ("Video player configuration error") means the host
+  page sent no `Referer`/`Origin`. `loadDataWithBaseURL` gives the document a
+  `data:` origin, which YouTube rejects. Serve the player page from a real https
+  origin instead: put it in `assets/` and load it via `WebViewAssetLoader`
+  (`https://appassets.androidplatform.net/assets/player.html`), with
+  `<meta name="referrer" content="strict-origin-when-cross-origin">`. Do not go
+  back to `loadDataWithBaseURL` for the player.
+- `ProxyFileParser` strips a leading UTF-8 BOM; document pickers return opaque
+  `lastPathSegment`s, so resolve the display name via `OpenableColumns`.
 
 ## Wiring checklist (audit before claiming "done")
 

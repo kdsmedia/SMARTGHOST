@@ -42,6 +42,9 @@ import com.altomedia.smartghost.coreui.component.PrimaryActionButton
 import com.altomedia.smartghost.coreui.component.SecondaryActionButton
 import com.altomedia.smartghost.coreui.component.SectionLabel
 import com.altomedia.smartghost.coreui.component.SmartCard
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
 import java.io.InputStreamReader
 
 /**
@@ -62,7 +65,7 @@ fun HomeScreen(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri ->
         if (uri != null) {
-            val name = uri.lastPathSegment?.substringAfterLast('/') ?: "proxy.txt"
+            val name = context.displayName(uri)
             val content = runCatching {
                 context.contentResolver.openInputStream(uri)?.use { stream ->
                     InputStreamReader(stream).readText()
@@ -272,4 +275,21 @@ private fun ComplianceNote() {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+}
+
+/**
+ * Resolves the human-readable file name for a picked document. Providers often
+ * return an opaque `lastPathSegment` (e.g. "1234"), so prefer the display name
+ * from [OpenableColumns].
+ */
+private fun Context.displayName(uri: Uri): String {
+    val fromProvider = runCatching {
+        contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
+    }.getOrNull()
+    return fromProvider
+        ?: uri.lastPathSegment?.substringAfterLast('/')
+        ?: "proxy.txt"
 }

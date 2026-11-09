@@ -39,7 +39,10 @@ object ProxyFileParser {
     private val HOST_REGEX = Regex("^[A-Za-z0-9._-]+$")
 
     fun parse(content: String?): ProxyParseResult {
-        if (content.isNullOrBlank()) {
+        // Editors on Windows often prepend a UTF-8 BOM; strip it so the first
+        // line is not misread as a bad host.
+        val text = content?.removePrefix("\uFEFF")
+        if (text.isNullOrBlank()) {
             return ProxyParseResult(emptyList(), emptyList(), 0)
         }
 
@@ -48,7 +51,7 @@ object ProxyFileParser {
         val seen = mutableSetOf<String>()
         var duplicates = 0
 
-        content.lineSequence().forEachIndexed { index, rawLine ->
+        text.lineSequence().forEachIndexed { index, rawLine ->
             val lineNumber = index + 1
             val line = rawLine.substringBefore('#').trim()
             if (line.isEmpty()) return@forEachIndexed

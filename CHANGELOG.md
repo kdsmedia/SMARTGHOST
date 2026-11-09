@@ -4,6 +4,33 @@ All notable changes to SMARTGHOST are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.3] — 2026-11-09
+
+Two user-reported defects fixed: the player failed with IFrame error 153 after
+START, and proxy `.txt` import was fragile.
+
+### Fixed
+- **Player error 153 ("Video player configuration error").** The host page was
+  loaded with `loadDataWithBaseURL`, giving it a `data:` origin, so the WebView
+  sent no `Referer`/`Origin` to YouTube and the IFrame player refused to start.
+  The page now ships as an asset and is served from a real https origin
+  (`https://appassets.androidplatform.net`) via `WebViewAssetLoader`, with
+  `<meta name="referrer" content="strict-origin-when-cross-origin">`. Error 153
+  also has its own explanatory message now.
+- **Proxy `.txt` reading hardened.** A UTF-8 BOM is stripped (Windows editors)
+  so the first endpoint is no longer misread; CRLF line endings are handled; the
+  picked file's real display name is shown (Android providers often return an
+  opaque id); and an unreadable file now reports "File '…' tidak dapat dibaca"
+  instead of silently loading zero endpoints.
+
+### Added
+- `feature-player/src/main/assets/player.html` — the bundled IFrame host page.
+- `HomeViewModelTest` (4 tests) and `PlayerAssetRuntimeTest` (4 runtime tests),
+  including a real `WebViewAssetLoader` check that the page is served over https.
+
+### Tests
+- 65 tests total (57 unit + 8 runtime), 0 failures; 0 lint errors.
+
 ## [1.0.2] — 2026-11-09
 
 Runtime verification on the JVM (no emulator available in this environment).

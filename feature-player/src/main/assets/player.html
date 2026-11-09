@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- YouTube rejects embeds whose page sends no Referer (IFrame error 153).
+         Serving this page from https://appassets.androidplatform.net gives the
+         document a real https origin, and this policy sends that origin as the
+         Referer for the player's cross-origin requests. -->
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <style>
+      html, body { margin: 0; padding: 0; background: #000; height: 100%; overflow: hidden; }
+      #player { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    </style>
+  </head>
+  <body>
+    <div id="player"></div>
+    <script>
+      var videoId = new URLSearchParams(location.search).get('videoId') || '';
+      var tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+
+      var player;
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+          videoId: videoId,
+          playerVars: {
+            'playsinline': 1,
+            'rel': 0,
+            'origin': location.origin
+          },
+          events: {
+            'onReady': function(e) { notifyState(e.target.getPlayerState()); },
+            'onStateChange': function(e) { notifyState(e.data); },
+            'onError': function(e) { notifyError(e.data); }
+          }
+        });
+      }
+      function notifyState(state) {
+        if (window.SmartGhostBridge) { SmartGhostBridge.onStateChange(state); }
+      }
+      function notifyError(code) {
+        if (window.SmartGhostBridge) { SmartGhostBridge.onPlayerError(code); }
+      }
+    </script>
+  </body>
+</html>

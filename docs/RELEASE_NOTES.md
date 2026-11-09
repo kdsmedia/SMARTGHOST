@@ -1,9 +1,9 @@
-# SMARTGHOST 1.0.2 — Release Notes
+# SMARTGHOST 1.0.3 — Release Notes
 
 **Brand:** ALTOMEDIA
 **Date:** 2026-11-09
 **Package:** `com.altomedia.smartghost`
-**versionCode / versionName:** `3` / `1.0.2`
+**versionCode / versionName:** `4` / `1.0.3`
 **Min / Target / Compile SDK:** 24 / 34 / 34
 
 ---
@@ -14,12 +14,26 @@
 | --- | --- |
 | File | `app/build/outputs/apk/release/app-release.apk` |
 | Size | ~1.4 MB |
-| SHA-256 | `b867949092e320f87ade73681a2d990d492c5e62d1a491a69832ea362cf3a12c` |
+| SHA-256 | `83b30f68b943c20464de0c5af62fb56915b169e4beb6b8cdb19526e67ec66523` |
 | Signature | APK Signature Scheme v2 — verified |
 | Signer | `CN=ALTOMEDIA, OU=SMARTGHOST, O=ALTOMEDIA, L=Jakarta, S=DKI Jakarta, C=ID` |
 | Key | RSA 4096-bit |
 
 > Recompute the SHA-256 after any rebuild: `sha256sum app/build/outputs/apk/release/app-release.apk`.
+
+## What changed in 1.0.3
+
+Two reported defects fixed.
+
+- **Player error 153 after START is fixed.** The player page used to be injected
+  with `loadDataWithBaseURL`, so it had a `data:` origin and the WebView sent no
+  `Referer`/`Origin`; YouTube's IFrame player then refused to start with error
+  153. The page is now a bundled asset served over a real https origin
+  (`https://appassets.androidplatform.net`) with a referrer policy meta tag.
+- **Proxy `.txt` import hardened.** UTF-8 BOM is stripped (so the first line is
+  not misread), CRLF endings work, the picked file shows its real name, and an
+  unreadable file reports a clear message instead of loading zero endpoints.
+- 65 tests total (57 unit + 8 runtime), 0 failures; lint 0 errors.
 
 ## What changed in 1.0.2
 

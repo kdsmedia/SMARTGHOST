@@ -49,6 +49,20 @@ class HomeViewModel @Inject constructor(
      * (Bab 7) — this never configures YouTube viewer spoofing.
      */
     fun onProxyFileLoaded(fileName: String, content: String?) {
+        if (content == null) {
+            lastProxy = null
+            sessionRepository.clear()
+            _uiState.update { current ->
+                current.copy(
+                    proxyFileName = fileName,
+                    proxyEndpointCount = 0,
+                    proxyErrors = emptyList(),
+                    message = "File '$fileName' tidak dapat dibaca. Pilih file .txt " +
+                        "yang berisi host:port.",
+                )
+            }
+            return
+        }
         val result = ProxyFileParser.parse(content)
         lastProxy = result
         sessionRepository.setProxyEndpoints(fileName, result.endpoints)
