@@ -103,8 +103,12 @@ object ProxyFileParser {
             remainder = line
         }
 
-        val parts = remainder.split(":")
-        if (parts.size != 2) {
+        // Drop optional userinfo ("user:pass@host:port"); only host and port are
+        // used for the connectivity check.
+        val hostPort = remainder.substringAfterLast('@')
+        val parts = hostPort.split(":")
+        // Accept "host:port" and the common list format "host:port:user:pass".
+        if (parts.size != 2 && parts.size != 4) {
             return LineResult.Err("Format harus host:port atau skema://host:port.")
         }
         val host = parts[0].trim()

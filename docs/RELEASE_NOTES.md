@@ -1,9 +1,9 @@
-# SMARTGHOST 1.0.3 — Release Notes
+# SMARTGHOST 1.0.4 — Release Notes
 
 **Brand:** ALTOMEDIA
 **Date:** 2026-11-09
 **Package:** `com.altomedia.smartghost`
-**versionCode / versionName:** `4` / `1.0.3`
+**versionCode / versionName:** `5` / `1.0.4`
 **Min / Target / Compile SDK:** 24 / 34 / 34
 
 ---
@@ -14,12 +14,23 @@
 | --- | --- |
 | File | `app/build/outputs/apk/release/app-release.apk` |
 | Size | ~1.4 MB |
-| SHA-256 | `83b30f68b943c20464de0c5af62fb56915b169e4beb6b8cdb19526e67ec66523` |
+| SHA-256 | `f36a4ff5b04b4e5de57356404288e771e156d14eb1acadf9e04ff7083a42a0da` |
 | Signature | APK Signature Scheme v2 — verified |
 | Signer | `CN=ALTOMEDIA, OU=SMARTGHOST, O=ALTOMEDIA, L=Jakarta, S=DKI Jakarta, C=ID` |
 | Key | RSA 4096-bit |
 
 > Recompute the SHA-256 after any rebuild: `sha256sum app/build/outputs/apk/release/app-release.apk`.
+
+## What changed in 1.0.4
+
+- START now draws **ten endpoints at random** from the imported `proxy.txt` on
+  every run and checks those (connectivity diagnostic, not a viewer count).
+- New terminal-style **ProxyConsole**: monospace green-on-black, one line per
+  endpoint with a live marker, a `● LIVE` header, `n/10 proxy bertugas` counter
+  and an mm:ss session clock.
+- The bottom HOME/RELOAD bar now clears the system navigation bar
+  (`navigationBarsPadding`); the session screen scrolls.
+- 77 tests, 0 failures; lint 0 errors.
 
 ## What changed in 1.0.3
 

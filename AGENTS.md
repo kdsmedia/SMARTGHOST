@@ -110,6 +110,17 @@ Features must never depend on each other. Cross-feature state goes through a
   back to `loadDataWithBaseURL` for the player.
 - `ProxyFileParser` strips a leading UTF-8 BOM; document pickers return opaque
   `lastPathSegment`s, so resolve the display name via `OpenableColumns`.
+- Edge-to-edge (`enableEdgeToEdge()`) means a `Scaffold` bottom bar sits under the
+  system navigation bar unless it applies `navigationBarsPadding()`. Any bottom
+  row must carry it.
+- START samples ten endpoints at random from the imported pool, so tests must not
+  assume a card's index maps to a specific proxy. Assert on labels, not indices
+  (see `DiagnosticsViewModelTest.reload`).
+- `SessionRepository` publishes the session sample on the same flow the panel
+  observes; the collector ignores emissions while `isRunning` or it would reset
+  the RUNNING cards mid-check.
+- Robolectric Compose tests cannot `assertIsDisplayed()` an item scrolled out of a
+  fixed-height `verticalScroll`; use `assertExists()` for lines below the fold.
 
 ## Wiring checklist (audit before claiming "done")
 

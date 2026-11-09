@@ -66,6 +66,9 @@ class DiagnosticsViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             sessionRepository.endpoints.collect { imported ->
+                // Ignore the echo from our own sampling while a session runs;
+                // otherwise it would reset the RUNNING cards mid-check.
+                if (_uiState.value.isRunning) return@collect
                 endpoints = imported.take(CARD_COUNT)
                 applyEndpoints()
             }
@@ -108,13 +111,26 @@ class DiagnosticsViewModel @Inject constructor(
         _uiState.update { it.copy(proxyFileName = name) }
     }
 
-    /** START: run one diagnostic pass with bounded concurrency (Bab 8). */
+    /**
+     * START: pick ten endpoints at random from the imported proxy.txt and run one
+     * diagnostic pass with bounded concurrency (Bab 7, 8). The random sample is
+     * re-drawn on every START; the endpoints are checked from the device only, so
+     * the panel keeps reporting connectivity — never a YouTube viewer count.
+     */
     fun start() {
-        if (endpoints.isEmpty()) {
-            _uiState.update { it.copy(note = "Tidak ada endpoint uji yang dikonfigurasi.") }
+        val sample = sessionRepository.sampleForSession(CARD_COUNT)
+        if (sample.isEmpty()) {
+            _uiState.update {
+                it.copy(
+                    note = "Tidak ada endpoint uji. Impor file proxy.txt lebih dulu.",
+                    cards = DiagnosticsUiState.defaultCards(),
+                )
+            }
             return
         }
-        runChecks(endpoints)
+        endpoints = sample
+        applyEndpoints()
+        runChecks(sample)
     }
 
     /** RELOAD: retry only the cards that failed; never replays playback. */

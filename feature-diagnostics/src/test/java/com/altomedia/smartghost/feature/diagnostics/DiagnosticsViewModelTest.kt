@@ -32,9 +32,11 @@ class DiagnosticsViewModelTest {
     /** Deterministic checker: any endpoint whose url contains "fail" fails. */
     private class FakeChecker : EndpointChecker {
         var calls = mutableListOf<Int>()
+        var lastLabels = mutableListOf<String>()
         var lastTimeout: Int? = null
         override suspend fun check(endpoint: TestEndpoint, timeoutSeconds: Int): DiagnosticResult {
             calls += endpoint.index
+            lastLabels += endpoint.label
             lastTimeout = timeoutSeconds
             val success = !endpoint.url.contains("fail")
             return DiagnosticResult(
@@ -127,7 +129,7 @@ class DiagnosticsViewModelTest {
     }
 
     @Test
-    fun `reload retries only failed cards`() = runTest(dispatcher) {
+    fun `reload retries only the endpoint that failed`() = runTest(dispatcher) {
         val vm = viewModel()
         repository.setProxyEndpoints(
             "proxy.txt",
@@ -138,11 +140,12 @@ class DiagnosticsViewModelTest {
         vm.start()
         advanceUntilIdle()
         checker.calls.clear()
+        checker.lastLabels.clear()
 
         vm.reloadFailed()
         advanceUntilIdle()
 
-        assertEquals(listOf(2), checker.calls)
+        assertEquals(listOf("bad.fail:80"), checker.lastLabels)
     }
 
     @Test
@@ -152,7 +155,28 @@ class DiagnosticsViewModelTest {
         advanceUntilIdle()
 
         assertTrue(checker.calls.isEmpty())
-        assertEquals("Tidak ada endpoint uji yang dikonfigurasi.", vm.uiState.value.note)
+        assertEquals(
+            "Tidak ada endpoint uji. Impor file proxy.txt lebih dulu.",
+            vm.uiState.value.note,
+        )
+    }
+
+    @Test
+    fun `start samples exactly ten endpoints from a larger pool`() = runTest(dispatcher) {
+        val vm = viewModel()
+        repository.setProxyEndpoints(
+            "proxy.txt",
+            (1..40).map { proxy("10.0.0.$it", 8000 + it) },
+        )
+        advanceUntilIdle()
+
+        vm.start()
+        advanceUntilIdle()
+
+        assertEquals((1..10).toList(), checker.calls.sorted())
+        val labels = vm.uiState.value.cards.map { it.endpointLabel }
+        assertEquals(10, labels.toSet().size)
+        assertTrue(vm.uiState.value.cards.all { it.status == DiagnosticStatus.SUCCESS })
     }
 
     @Test

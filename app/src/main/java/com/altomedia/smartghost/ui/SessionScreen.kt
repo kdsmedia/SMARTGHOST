@@ -5,7 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Refresh
@@ -41,6 +44,7 @@ fun SessionScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .navigationBarsPadding()
                     .padding(horizontal = 16.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -65,18 +69,16 @@ fun SessionScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
+                .padding(padding)
+                .verticalScroll(rememberScrollState()),
         ) {
             PlayerScreen(
                 videoId = videoId,
                 onOpenInYouTube = onOpenInYouTube,
                 modifier = Modifier.padding(top = 8.dp),
             )
-            // The diagnostics panel owns its own scrolling grid (Bab 8).
-            DiagnosticsPanel(
-                viewModel = diagnosticsViewModel,
-                modifier = Modifier.weight(1f),
-            )
+            // Console of the ten endpoints on duty for this session (Bab 8).
+            DiagnosticsPanel(viewModel = diagnosticsViewModel)
         }
     }
 }

@@ -25,6 +25,7 @@ compiles. They run on the JVM with `./gradlew testDebugUnitTest`.
 | `DiagnosticsIntegrationRuntimeTest` | 1 | Full stack: the real ViewModel calls the real OkHttp checker against a real HTTP server (MockWebServer) for ten endpoints; all ten cards reach `SUCCESS` and the server records ten requests. |
 | `DataStorePersistenceTest` | 4 | Settings and diagnostic history really persist in a real DataStore and read back; the timeout is clamped; secrets are redacted before storage. |
 | `PlayerAssetRuntimeTest` | 4 | The bundled player page is really served from `https://appassets.androidplatform.net` by a real `WebViewAssetLoader` (so the WebView sends a Referer and YouTube does not reject it with error 153); the page contains the IFrame API and referrer policy; error 153 maps to a specific message. |
+| `ProxyConsoleRuntimeTest` | 1 | The terminal console really renders the ten endpoints it is handed, with the `● LIVE` header and the `n/10 proxy bertugas` counter. |
 | `AppBootsRuntimeTest` | 1 | The real `Application` (Hilt graph + manifest) instantiates without crashing. |
 
 The runtime suite always runs on the JVM; it needs no device. Instrumented tests in
@@ -41,13 +42,15 @@ Run all:
 | Suite | Cases | What it proves |
 | --- | --- | --- |
 | `YouTubeUrlParserTest` | 15 | `watch`, `youtu.be`, `shorts`, `live`, `embed`, and `youtube-nocookie` links parse; missing/invalid ids and non-YouTube hosts are rejected with the correct result type. |
-| `ProxyFileParserTest` | 14 | `host:port` and `scheme://host:port` lines parse; blank lines and `#` comments are ignored; a UTF-8 BOM and CRLF endings are handled; bad ports, schemes, and malformed lines are reported **with line numbers**; duplicates are counted once. |
+| `ProxyFileParserTest` | 16 | `host:port` and `scheme://host:port` lines parse; blank lines and `#` comments are ignored; a UTF-8 BOM and CRLF endings are handled; bad ports, schemes, and malformed lines are reported **with line numbers**; duplicates are counted once. |
 | `OkHttpEndpointCheckerTest` | 3 | Success returns latency + HTTP code; server errors map to a short summary; DNS failure maps to a friendly message. Uses a real HTTP server (`MockWebServer`), not a stubbed client. |
 | `SecretRedactorTest` | 10 | GitHub tokens, bearer tokens, password/api-key assignments, URL credentials, and JWTs are redacted; plain text is untouched. |
-| `DiagnosticsViewModelTest` | 6 | Panel always exposes 10 cards; imported endpoints populate labels; START checks all endpoints; RELOAD retries only failed cards; empty-config start reports a note; STOP cancels the session. |
+| `DiagnosticsViewModelTest` | 9 | Panel always exposes 10 cards; imported endpoints populate labels; START checks all endpoints; RELOAD retries only failed cards; empty-config start reports a note; STOP cancels the session. |
 | `HomeViewModelTest` | 4 | A loaded proxy file publishes its endpoints to the session; a BOM file still parses; an unreadable file reports a clear message and clears the session; `clearProxy` empties both. |
+| `SessionRepositoryTest` | 6 | The imported pool is kept whole; `sampleForSession` returns exactly ten unique endpoints drawn from it, handles a smaller pool and an empty pool, and `clear` empties everything. |
+| `ProxyConsoleFormatTest` | 2 | The console mm:ss clock formats correctly and clamps negatives. |
 
-**Total: 57 pure unit tests + 8 runtime tests = 65 tests, 0 failures.**
+**Total: 65 pure unit tests + 12 runtime tests = 77 tests, 0 failures.**
 
 ### Why the parsers are pure-JVM
 

@@ -4,6 +4,31 @@ All notable changes to SMARTGHOST are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.4] — 2026-11-09
+
+Session console rework plus two layout/robustness fixes requested by the user.
+
+### Added
+- **Random ten-endpoint sampling on START.** Every START now draws ten endpoints
+  at random from the imported `proxy.txt` (`SessionRepository.sampleForSession`)
+  and checks those; the console updates live. With a pool of hundreds, each
+  session shows a different ten. Endpoints are still only probed from the device
+  — this remains a connectivity diagnostic, never a YouTube viewer count.
+- **`ProxyConsole`** — a terminal-style panel: monospace green text on black,
+  one line per endpoint with a live status marker, a `● LIVE`/`○ IDLE` header, an
+  `n/10 proxy bertugas` counter and an mm:ss session clock that ticks while a
+  session runs.
+
+### Fixed
+- **Bottom bar no longer hidden by the system navigation bar.** The HOME/RELOAD
+  row now applies `navigationBarsPadding()` under edge-to-edge.
+- The session screen scrolls, so the player block and the console block both
+  stay reachable on short screens.
+
+### Tests
+- `SessionRepositoryTest` (6) for sampling; console tests (format + runtime);
+  sampling test in `DiagnosticsViewModelTest`. 74 tests total, 0 failures.
+
 ## [1.0.3] — 2026-11-09
 
 Two user-reported defects fixed: the player failed with IFrame error 153 after

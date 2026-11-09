@@ -35,6 +35,23 @@ class ProxyFileParserTest {
     }
 
     @Test
+    fun `ip port user pass format keeps only host and port`() {
+        val result = ProxyFileParser.parse("1.2.3.4:8080:alice:secret")
+        assertEquals(1, result.endpoints.size)
+        val endpoint = result.endpoints.first()
+        assertEquals("1.2.3.4", endpoint.host)
+        assertEquals(8080, endpoint.port)
+    }
+
+    @Test
+    fun `userinfo in a scheme url is ignored`() {
+        val result = ProxyFileParser.parse("http://alice:secret@10.0.0.1:3128")
+        assertEquals(1, result.endpoints.size)
+        assertEquals("10.0.0.1", result.endpoints.first().host)
+        assertEquals(3128, result.endpoints.first().port)
+    }
+
+    @Test
     fun `host port lines are parsed with default scheme`() {
         val result = ProxyFileParser.parse("127.0.0.1:8080")
         assertEquals(1, result.endpoints.size)
