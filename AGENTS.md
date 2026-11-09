@@ -45,9 +45,20 @@ COMPILE — run `compileDebugAndroidTestKotlin` after touching Compose UI.
 Release signing reads env vars (never hardcode secrets):
 `SMARTGHOST_KEYSTORE_PATH`, `SMARTGHOST_KEYSTORE_PASSWORD`,
 `SMARTGHOST_KEY_ALIAS`, `SMARTGHOST_KEY_PASSWORD`. If the keystore path is unset
-the release is built unsigned (CI compile check). Keystore lives OUTSIDE the repo.
+the release is built unsigned (CI compile check).
+
+Per explicit repository-owner instruction, the keystore and APKs ARE committed
+under `dist/` (the owner accepts the risk on this public repo). `dist/README.md`
+documents the alias and password. If you build a release, also refresh
+`dist/smartghost-<version>-release.apk` and its SHA-256.
 
 Builds are slow (>90s) — run them in the background and poll the log file.
+
+## Push policy (owner instruction)
+
+The owner requires every change to be pushed to `origin main` immediately after
+editing. `origin` is configured with a token URL for this purpose. Commit and
+push at the end of every change, including docs and artifacts.
 
 ## Module layout & dependency rules
 
